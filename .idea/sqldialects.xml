@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SqlDialectMappings">
+    <file url="file://$USER_HOME$/CommonDataModel/CodeExcerpts/DerivedTables/postgresql/GenerateEra.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/OSIM2_package.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/OSIM5_hoi_outcomes.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/OSIM5_package.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/OSIM5_tables.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/OSIM5_views.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/joins.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/test.sql" dialect="PostgreSQL" />
+    <file url="PROJECT" dialect="OracleSqlPlus" />
+  </component>
+</project>

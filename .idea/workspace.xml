@@ -1,0 +1,505 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="20672e71-8641-40cf-90f3-8bdaa94f9f43" name="Default" comment="" />
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="TRACKING_ENABLED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="DatabaseView">
+    <option name="SHOW_INTERMEDIATE" value="true" />
+    <option name="GROUP_SCHEMA" value="true" />
+    <option name="GROUP_CONTENTS" value="false" />
+    <option name="SORT_POSITIONED" value="false" />
+    <option name="SHOW_TABLE_DETAILS" value="true" />
+    <option name="SHOW_EMPTY_GROUPS" value="false" />
+    <option name="AUTO_SCROLL_FROM_SOURCE" value="false" />
+    <expand>
+      <path>
+        <item name="" type="eadb38e5:DatabaseStructure$Root" />
+        <item name="postgres@localhost" type="e3449647:DbNodeDescriptor" />
+      </path>
+      <path>
+        <item name="" type="eadb38e5:DatabaseStructure$Root" />
+        <item name="postgres@ohdsi_v5.i3l.gatech.edu" type="e3449647:DbNodeDescriptor" />
+      </path>
+      <path>
+        <item name="" type="eadb38e5:DatabaseStructure$Root" />
+        <item name="postgres@ohdsi_v5.i3l.gatech.edu" type="e3449647:DbNodeDescriptor" />
+        <item name="postgres" type="e3449647:DbNodeDescriptor" />
+      </path>
+      <path>
+        <item name="" type="eadb38e5:DatabaseStructure$Root" />
+        <item name="postgres@ohdsi_v5.i3l.gatech.edu" type="e3449647:DbNodeDescriptor" />
+        <item name="postgres" type="e3449647:DbNodeDescriptor" />
+        <item name="lite_synpuf2" type="e3449647:DbNodeDescriptor" />
+      </path>
+      <path>
+        <item name="" type="eadb38e5:DatabaseStructure$Root" />
+        <item name="postgres@ohdsi_v5.i3l.gatech.edu" type="e3449647:DbNodeDescriptor" />
+        <item name="postgres" type="e3449647:DbNodeDescriptor" />
+        <item name="lite_synpuf2" type="e3449647:DbNodeDescriptor" />
+        <item name="" type="fce03ad6:DatabaseStructure$GroupNode" />
+      </path>
+      <path>
+        <item name="" type="eadb38e5:DatabaseStructure$Root" />
+        <item name="postgres@ohdsi_v5.i3l.gatech.edu" type="e3449647:DbNodeDescriptor" />
+        <item name="postgres" type="e3449647:DbNodeDescriptor" />
+        <item name="public" type="e3449647:DbNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
+  <component name="FileEditorManager">
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file leaf-file-name="console.sql" pinned="false" current-in-tab="false">
+        <entry file="file://$APPLICATION_CONFIG_DIR$/consoles/db/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/console.sql">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="0">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="1" selection-end-column="21" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="OSIM5_package.sql" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/OSIM5_package.sql">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-929">
+              <caret line="104" column="28" lean-forward="true" selection-start-line="104" selection-start-column="28" selection-end-line="104" selection-end-column="28" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="procedure_occurrence" pinned="false" current-in-tab="false">
+        <entry file="das://table:/49cf50bb/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.lite_synpuf2.procedure_occurrence">
+          <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+            <state>
+              <filtering enabled="true" />
+              <column-attributes>
+                <column name="ctid" enabled="false" />
+              </column-attributes>
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>this_obs_days</find>
+      <find>If this_era_date</find>
+      <find>delete_all</find>
+      <find>if this_era</find>
+      <find>ins_sim_condit</find>
+      <find>random()</find>
+      <find>ins_sim_person</find>
+      <find>ins_sim_condition</find>
+      <find>randomi</find>
+      <find>ins_sim_obse</find>
+      <find>ins_ous</find>
+      <find>DBMS_RANDOM.VALUE</find>
+      <find>ins_sim_con</find>
+      <find>normal_rand</find>
+      <find>ins_sim_cond</find>
+      <find>drug_outcome</find>
+      <find>osim_drug_outcome</find>
+      <find>EXTENSION</find>
+      <find>analyze_src</find>
+      <find>copy</find>
+      <find>COMMIT</find>
+      <find>ins_sr</find>
+      <find>ins_sim</find>
+      <find>ins_src</find>
+      <find>analyze_s</find>
+      <find>insert</find>
+      <find>raise notice</find>
+      <find>insert_log</find>
+      <find>ins_sim_data</find>
+      <find>drug</find>
+    </findStrings>
+    <replaceStrings>
+      <replace>gender_source_concept_id</replace>
+      <replace>DROP TABLE IF EXISTS</replace>
+      <replace>CREATE UNLOGGED TABLE</replace>
+      <replace>CREATE FUNCTION</replace>
+      <replace>INTGER</replace>
+      <replace>VARCHAR</replace>
+      <replace>OSIM__</replace>
+      <replace>CREATE OR REPLACE FUNCTION</replace>
+      <replace>SELECT insert_log</replace>
+      <replace>num_rows</replace>
+      <replace>osim__</replace>
+      <replace>coalesce</replace>
+      <replace>oid</replace>
+      <replace>to_number</replace>
+      <replace>random()</replace>
+      <replace />
+      <replace>INTEGER</replace>
+      <replace>raise notice '% %', SQLERRM, SQLSTATE;</replace>
+      <replace>PERFORM</replace>
+      <replace>normal_random(1, 0, 1);</replace>
+      <replace>normal_random(1, 0, 1)</replace>
+      <replace>normal_rand</replace>
+      <replace>normal_rand(1, 0, 1)</replace>
+      <replace>truven_13</replace>
+      <replace>omop</replace>
+      <replace>--COMMIT;</replace>
+      <replace>raise debug</replace>
+      <replace>ins_sim_procedures</replace>
+      <replace>procedure</replace>
+    </replaceStrings>
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/2bd3ecaa-a906-4799-bc67-ba95c249e1c7/console.sql" />
+        <option value="$PROJECT_DIR$/OSIM2_views.sql" />
+        <option value="src:table:/d5e2b365/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/postgres.public.osim_log" />
+        <option value="$PROJECT_DIR$/OSIM2_tables.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_2.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_4.sql" />
+        <option value="/fc19aa5e/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/database/postgres/schema/public/routine/ins_cond_era_count_prob.().sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_7.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_6.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_1.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_3.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_5.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_8.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_9.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_10.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_11.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_12.sql" />
+        <option value="/fc19aa5e/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/database/postgres/schema/public/routine/osim__get_first_cond_transitions.().sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_13.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_14.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_15.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_16.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_17.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_18.sql" />
+        <option value="/fc19aa5e/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/database/postgres/schema/public/routine/osim__age_bucket.(numeric).sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_20.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_19.sql" />
+        <option value="$PROJECT_DIR$/OSIM2_hoi_outcomes.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_21.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_22.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_24.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/console_2.sql" />
+        <option value="$PROJECT_DIR$/OSIM2_package.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console_23.sql" />
+        <option value="$PROJECT_DIR$/joins.sql" />
+        <option value="$PROJECT_DIR$/OSIM5_package_copy.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/c5260375-9a0d-4d6b-b63d-a82153a4d9f0/console_1.sql" />
+        <option value="$USER_HOME$/CommonDataModel/CodeExcerpts/DerivedTables/postgresql/GenerateEra.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/console_3.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console.sql" />
+        <option value="$PROJECT_DIR$/test.sql" />
+        <option value="$PROJECT_DIR$/#ReadMe.txt" />
+        <option value="$PROJECT_DIR$/OSIM5_hoi_outcomes.sql" />
+        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/console.sql" />
+        <option value="$PROJECT_DIR$/OSIM5_views.sql" />
+        <option value="$PROJECT_DIR$/OSIM5_package.sql" />
+        <option value="$PROJECT_DIR$/OSIM5_tables.sql" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="x" value="2153" />
+    <option name="y" value="79" />
+    <option name="width" value="1207" />
+    <option name="height" value="746" />
+  </component>
+  <component name="ProjectView">
+    <navigator currentView="ProjectPane" proportions="" version="1">
+      <flattenPackages />
+      <showMembers />
+      <showModules />
+      <showLibraryContents />
+      <hideEmptyPackages />
+      <abbreviatePackageNames />
+      <autoscrollToSource />
+      <autoscrollFromSource />
+      <sortByType />
+      <manualOrder />
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="Scope" />
+      <pane id="Scratches" />
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="OSIM5CodeDocumentation" type="8cb6161f:DatabaseProjectViewPane$1$1" />
+              <item name="OSIM5CodeDocumentation" type="5b8f4e1:DatabaseProjectViewPane$1$1$1" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="com.intellij.database.dataSource.DataSourceTemplate" value="PostgreSQL" />
+    <property name="settings.editor.selected.configurable" value="database.main2" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="ShelveChangesManager" show_recycled="false">
+    <option name="remove_strategy" value="false" />
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="2153" y="79" width="1617" height="1062" extended-state="6" />
+    <editor active="true" />
+    <layout>
+      <window_info id="Database Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.30526316" sideWeight="0.520743" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32507738" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.30526316" sideWeight="0.47925696" order="6" side_tool="true" content_ui="tabs" />
+      <window_info id="Database" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22352941" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Database Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.34421054" sideWeight="0.41857585" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
+      <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32947367" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+    </layout>
+    <layout-to-restore>
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.30526316" sideWeight="0.46191952" order="6" side_tool="true" content_ui="tabs" />
+      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Database Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.34105262" sideWeight="0.35170278" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Database Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.30526316" sideWeight="0.5380805" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32507738" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Database" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22352941" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32947367" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
+    </layout-to-restore>
+  </component>
+  <component name="VcsContentAnnotationSettings">
+    <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager />
+    <watches-manager />
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="das://view:/fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.s_person" />
+    <entry file="das://table:/fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synpuf5.person" />
+    <entry file="file://$PROJECT_DIR$/OSIM5_package_copy.sql" />
+    <entry file="file://$APPLICATION_CONFIG_DIR$/consoles/db/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/console_3.sql">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="36">
+          <caret line="2" column="29" lean-forward="false" selection-start-line="2" selection-start-column="29" selection-end-line="2" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://table:/fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.osim_drug_era" />
+    <entry file="das://table:/fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.osim_cond_count_probability" />
+    <entry file="das://table:/fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.osim_cond_era_count_prob" />
+    <entry file="das://table:/fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.osim_drug_reoccur_probability" />
+    <entry file="das://table:/fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.osim_person" />
+    <entry file="dbSrc:///fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/database/postgres/schema/synthetic_data_generation/routine/insert_log.(text,text).sql" />
+    <entry file="dbSrc:///fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/database/postgres/schema/synthetic_data_generation/routine/insert_log.(text,text).sql" />
+    <entry file="dbSrc:///fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/database/postgres/schema/synthetic_data_generation/routine/insert_log.(text,text).sql" />
+    <entry file="dbSrc:///fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/database/postgres/schema/synthetic_data_generation/routine/insert_log.(text,text).sql" />
+    <entry file="dbSrc:///fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/database/postgres/schema/synthetic_data_generation/routine/insert_log.(text,text).sql" />
+    <entry file="dbSrc:///fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/database/postgres/schema/synthetic_data_generation/routine/insert_log.(text,text).sql" />
+    <entry file="dbSrc:///fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/database/postgres/schema/synthetic_data_generation/routine/insert_log.(text,text).sql" />
+    <entry file="dbSrc:///fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/database/postgres/schema/synthetic_data_generation/routine/insert_log.(text,text).sql" />
+    <entry file="dbSrc:///fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/database/postgres/schema/synthetic_data_generation/routine/insert_log.(text,text).sql" />
+    <entry file="file://$PROJECT_DIR$/OSIM2_package.sql" />
+    <entry file="dbSrc:///fc19aa5e/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/database/postgres/schema/public/routine/ins_src_db_attributes.().sql" />
+    <entry file="file://$PROJECT_DIR$/joins.sql">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://table:/fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.osim_src_db_attributes" />
+    <entry file="das://table:/fc19aa5e/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/postgres.public.osim_log" />
+    <entry file="das://table:/fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.osim_age_at_obs_probability" />
+    <entry file="das://table:/fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.osim_drug_era_count_prob" />
+    <entry file="das://table:/fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.osim_cond_reoccur_probability" />
+    <entry file="dbSrc:///fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/database/postgres/schema/synthetic_data_generation/routine/ins_cond_days_before_prob.().sql" />
+    <entry file="das://table:/fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.osim_drug_duration_probability" />
+    <entry file="das://table:/fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.osim_first_cond_probability" />
+    <entry file="das://table:/fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.osim_log" />
+    <entry file="dbSrc:///fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/database/postgres/schema/synthetic_data_generation/routine/ins_first_cond_probability.().sql" />
+    <entry file="das://table:/fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.osim_condition_era" />
+    <entry file="file://$APPLICATION_CONFIG_DIR$/consoles/db/d83f4e5b-b692-4070-ae54-e69b5ebab0fd/console.sql">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="54">
+          <caret line="3" column="6" lean-forward="false" selection-start-line="3" selection-start-column="6" selection-end-line="3" selection-end-column="6" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://view:/fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.s_condition_era" />
+    <entry file="file://$PROJECT_DIR$/#ReadMe.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1098">
+          <caret line="61" column="14" lean-forward="false" selection-start-line="61" selection-start-column="14" selection-end-line="61" selection-end-column="14" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://table:/fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.osim_drug_count_prob" />
+    <entry file="das://table:/fc19aa5e/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.osim_gender_probability" />
+    <entry file="file://$PROJECT_DIR$/OSIM5_hoi_outcomes.sql">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="324">
+          <caret line="39" column="6" lean-forward="false" selection-start-line="39" selection-start-column="6" selection-end-line="39" selection-end-column="6" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test.sql">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="665">
+          <caret line="45" column="6" lean-forward="false" selection-start-line="45" selection-start-column="6" selection-end-line="45" selection-end-column="6" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://table:/49cf50bb/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.osim_drug_era_count_prob">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+          <column-attributes>
+            <column name="ctid" enabled="false" />
+          </column-attributes>
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://table:/49cf50bb/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.osim_observation_period">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+          <column-attributes>
+            <column name="ctid" enabled="false" />
+          </column-attributes>
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://table:/49cf50bb/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.osim_drug_era">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+          <column-attributes>
+            <column name="ctid" enabled="false" />
+          </column-attributes>
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://table:/49cf50bb/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.osim_condition_era">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+          <column-attributes>
+            <column name="ctid" enabled="false" />
+          </column-attributes>
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://table:/49cf50bb/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.osim_person">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+          <column-attributes>
+            <column name="ctid" enabled="false" />
+          </column-attributes>
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://table:/49cf50bb/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.osim_drug_outcome">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+          <column-attributes>
+            <column name="ctid" enabled="false" />
+          </column-attributes>
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://table:/49cf50bb/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.synthetic_data_generation.osim_gender_probability">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+          <column-attributes>
+            <column name="ctid" enabled="false" />
+          </column-attributes>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/OSIM5_views.sql">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="18">
+          <caret line="43" column="5" lean-forward="false" selection-start-line="43" selection-start-column="5" selection-end-line="43" selection-end-column="5" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://table:/49cf50bb/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/postgres.lite_synpuf2.procedure_occurrence">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+          <column-attributes>
+            <column name="ctid" enabled="false" />
+          </column-attributes>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/OSIM5_tables.sql">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="442">
+          <caret line="578" column="4" lean-forward="true" selection-start-line="578" selection-start-column="4" selection-end-line="578" selection-end-column="4" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/consoles/db/ab3d7388-27bf-4f3a-ac06-484b9a6a44e1/console.sql">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="1" selection-end-column="21" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/OSIM5_package.sql">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-929">
+          <caret line="104" column="28" lean-forward="true" selection-start-line="104" selection-start-column="28" selection-end-line="104" selection-end-column="28" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+  </component>
+</project>

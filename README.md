@@ -34,10 +34,10 @@ This package was built on PostgreSQL.
     
     ============================================================================
     Example view creation:
-    CREATE OR REPLACE VIEW s_person as select * from synpuf5.person;
-    CREATE OR REPLACE VIEW s_condition_era as select * from synpuf5.condition_era;
-    CREATE OR REPLACE VIEW s_observation_period as select * from synpuf5.observation_period;
-    CREATE OR REPLACE VIEW s_drug_era as select * from synpuf5.drug_era;
+    CREATE OR REPLACE VIEW s_person as select * from [CDM_SCHEMA].person;
+    CREATE OR REPLACE VIEW s_condition_era as select * from [CDM_SCHEMA].condition_era;
+    CREATE OR REPLACE VIEW s_observation_period as select * from [CDM_SCHEMA].observation_period;
+    CREATE OR REPLACE VIEW s_drug_era as select * from [CDM_SCHEMA].drug_era;
 
 
 

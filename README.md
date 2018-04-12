@@ -27,7 +27,7 @@ This package was built on PostgreSQL.
 
 ## Execution
 
-### Step 1: Required Views
+### Step 1: Edit Views
 
     In order to analyze a CDM format database, the schema and tables for the source data need to be specified in OSIM 5.
     Modify the first 4 views in OSIM5_views.sql to point to the required tables. The final views should look as follows
@@ -41,7 +41,7 @@ This package was built on PostgreSQL.
 
 
 
-### Step 2: Standard Views
+### Step 2: Create Views
 
   The above generated views are accessed through a standard set of read-only views. These are contained in the OSIM5_views.sql 
   file and are seperate from the OSIM package and can be slightly modified with

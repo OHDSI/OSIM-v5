@@ -10,7 +10,7 @@ IMPORTANT NOTE:
 Most of this documentation and code logic is identical to version 2, with syntactical changes as 
 required for the new format and PsotgreSQL conversion. 
 <br/>
-Please refer to the documentation available at: , or the paper avaibale at: for more information.
+Please refer to the documentation available in v2 Documentation folder, or the paper avaibale at: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3243118/ for more information.
 
 ## Current Version
 Written in PostgreSQL: Kausar Mukadam, Georgia Tech Research Institute
@@ -88,15 +88,14 @@ This package was built on PostgreSQL.
   The user can control these ranges and bucketing by modifying the function in OSIM5_package.sql. The default buckets were
   are identicla to version 2 (which were derived from trial and error during development).  The functions are 
   described in more detail in the Data dictionary and Process Design 
-  documentation of OSIM 2 avaiable at ______.
+  documentation of OSIM 2 avaiable in v2 documentation folder.
   
   Please note: The same range functions must be used during anaysis and simulation phases.
   
 
 ### Step 4: Table Generation
 The OSIM 5 package uses some tables (in the anaysis stage, to store final synthetic data, etc), whcih need to be created before 
-the package is executed. This can be done by executing the OSIM5_tables.sql file. The tables are described in detail in the Data Dictionary and Process Design 
-documentation of OSIM 2(linked above).
+the package is executed. This can be done by executing the OSIM5_tables.sql file. The tables are described in detail in the Data Dictionary and Process Design documentation of OSIM 2.
 
 ### Step 5: Analysis Phase: analyze_source_db()
 
@@ -156,16 +155,15 @@ In Progress
    All command blocks should be executed inside PostgreSQL
 
 
-   --========================================================================<br/>
-   --Simple non-parallel analysis and simulation of 100,000 persons <br/>
+   ========================================================================<br/>
+   -- Simple non-parallel analysis and simulation of 100,000 persons <br/>
    begin <br/>
      analyze_source_db(); <br/>
      ins_sim_data(100000); <br/>
    end; <br/>
-   /
    
    
-    --========================================================================
+   ========================================================================<br/>
    -- Analysis and parallel simulation of 50,000 persons (2 x 250,000) <br/>
    -- ANALYSIS MUST COMPLETE BEFORE STARTING SIMULATIONS <br/>
    begin <br/>

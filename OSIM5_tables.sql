@@ -63,7 +63,7 @@
 --================================================================================
 -- TABLE osim_condition_era
 --================================================================================
-SET search_path TO synthetic_data_generation;
+SET search_path TO synthetic_data_generation_mimic;
 
 DROP TABLE IF EXISTS osim_condition_era;
 CREATE UNLOGGED TABLE osim_condition_era (
@@ -495,26 +495,26 @@ CREATE INDEX osim_drug_era_count_ix2 ON osim_drug_era_count_prob (accumulated_pr
   WITH (FILLFACTOR = 90);
 
 --================================================================================
--- TABLE osim_procedure_era_count_prob
+-- TABLE osim_procedure_occurrence_count_prob
 --================================================================================
-DROP TABLE IF EXISTS osim_procedure_era_count_prob;
-  CREATE UNLOGGED TABLE osim_procedure_era_count_prob (
+DROP TABLE IF EXISTS osim_procedure_occurrence_count_prob;
+  CREATE UNLOGGED TABLE osim_procedure_occurrence_count_prob (
   procedure_concept_id NUMERIC(15,0),
 	procedure_count_bucket NUMERIC(5,0),
   condition_count_bucket NUMERIC(5,0),
   age_range NUMERIC(3,0),
   time_remaining NUMERIC(3,0),
-	procedure_era_count NUMERIC(5,0),
+	procedure_occurrence_count NUMERIC(5,0),
   total_exposure NUMERIC(5,0),
   n NUMERIC(10,0),
 	accumulated_probability FLOAT)
   WITH (OIDS= TRUE, FILLFACTOR = 90);
 
-CREATE INDEX osim_procedure_era_count_ix1 ON osim_procedure_era_count_prob (
+CREATE INDEX osim_procedure_occurrence_count_ix1 ON osim_procedure_occurrence_count_prob (
   procedure_concept_id, procedure_count_bucket, condition_count_bucket, age_range, time_remaining)
   WITH (FILLFACTOR = 90);
 
-CREATE INDEX osim_procedure_era_count_ix2 ON osim_procedure_era_count_prob (accumulated_probability)
+CREATE INDEX osim_procedure_occurrence_count_ix2 ON osim_procedure_occurrence_count_prob (accumulated_probability)
   WITH (FILLFACTOR = 90);
 
 --================================================================================
@@ -579,3 +579,4 @@ CREATE INDEX osim_procedure_reoccur_ix1 ON osim_procedure_reoccur_probability (
 
 CREATE INDEX osim_procedure_reoccur_ix2 ON osim_procedure_reoccur_probability (accumulated_probability)
   WITH (FILLFACTOR = 90);
+

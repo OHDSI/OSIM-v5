@@ -60,15 +60,15 @@
 
 --================================================================================
 -- Step 1. Adjust search path to destination schema as necessary
-SET search_path TO synthetic_data_generation, public;
+SET search_path TO synthetic_data_generation_mimic, public;
 
 --================================================================================
 -- Set 2. Edit views/schema to point to source tables
-CREATE OR REPLACE VIEW s_person as select * from synpuf5.person;
-CREATE OR REPLACE VIEW s_condition_era as select * from synpuf5.condition_era;
-CREATE OR REPLACE VIEW s_observation_period as select * from synpuf5.observation_period;
-CREATE OR REPLACE VIEW s_drug_era as select * from synpuf5.drug_era;
-
+CREATE OR REPLACE VIEW s_person as select * from mimic_v5.person;
+CREATE OR REPLACE VIEW s_condition_era as select * from mimic_v5.condition_era;
+CREATE OR REPLACE VIEW s_observation_period as select * from mimic_v5.observation_period;
+CREATE OR REPLACE VIEW s_drug_era as select * from mimic_v5.drug_era;
+CREATE OR REPLACE VIEW s_procedure_occurrence as select * from mimic_v5.procedure_occurrence;
 --================================================================================
 -- VIEW v_src_person
 --================================================================================
@@ -246,4 +246,49 @@ SELECT /*+ NO_PARALLEL(cond) */ DISTINCT
   drug_era_id, drug.drug_exposure_count
 FROM s_drug_era drug
 INNER JOIN v_src_person person ON drug.person_id = person.person_id;
+
+
+
+--==============================================================
+--PROCEDURES
+--==============================================================
+
+--================================================================================
+-- VIEW v_src_procedure_occurrence1
+--================================================================================
+CREATE OR REPLACE VIEW v_src_procedure_occurrence1
+  (procedure_occurrence_id, procedure_date, person_id,
+  procedure_concept_id, quantity) AS
+SELECT /*+ NO_PARALLEL(drug) */
+  procedure_occurrence_id, procedure_date, p.person_id,
+  procedure_concept_id, quantity
+FROM s_procedure_occurrence p
+INNER JOIN v_src_person person ON p.person_id = person.person_id;
+
+--================================================================================
+-- VIEW v_src_first_procedures
+-- retrieves very first procedure occurrence of each procedure concept for each person
+--================================================================================
+CREATE OR REPLACE VIEW v_src_first_procedures
+(person_id, procedure_date, procedure_concept_id) AS
+SELECT DISTINCT
+  procedure.person_id,
+  FIRST_VALUE(procedure_date)
+    OVER
+    (PARTITION BY procedure.person_id, procedure.procedure_concept_id
+      ORDER BY procedure.procedure_date) AS procedure_date,
+  procedure_concept_id
+FROM v_src_procedure_occurrence1 procedure
+INNER JOIN s_person person ON procedure.person_id = person.person_id
+GROUP BY procedure.person_id, procedure_date, procedure_concept_id;
+
+--================================================================================
+-- VIEW v_src_procedure_occurrence1_ids
+--================================================================================
+CREATE OR REPLACE VIEW v_procedure_occurrence1_ids
+ (procedure_occurrence_id, quantity) AS
+SELECT /*+ NO_PARALLEL(cond) */ DISTINCT
+  procedure_occurrence_id, procedure.quantity
+FROM s_procedure_occurrence procedure
+INNER JOIN v_src_person person ON procedure.person_id = person.person_id;
 

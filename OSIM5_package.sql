@@ -526,33 +526,33 @@ $$ LANGUAGE plpgsql;
   END;
   $$ LANGUAGE plpgsql;
 
-  CREATE OR REPLACE FUNCTION insert_log_atx(text, text)
-    RETURNS VOID AS $$
-  DECLARE
-    m ALIAS FOR $1;
-    procedure_name ALIAS FOR $2;
-    open_connections TEXT [] := PUBLIC.dblink_get_connections();
-    --v_conn_str  text := 'port=5432 dbname=postgres host=ohdsi_v5.i3l.gatech.edu user=ohdsi_admin_user password=J4ckets_4_synpUf';
-    v_conn_str  text := 'port=5432 dbname=postgres host=localhost user=kausarm password=Pass@123';
-    v_query     text;
-    my_dblink_name TEXT := 'logging_dblink' ;
-  BEGIN
-    IF open_connections IS NULL
-       OR NOT open_connections @> ARRAY [ my_dblink_name ] THEN
-        PERFORM PUBLIC.dblink_connect(
-            my_dblink_name, v_conn_str);
-        raise debug 'New db link connection made' ;
-    ELSE
-        raise debug 'Db link connection exists, re-using' ;
-    END IF;
-
-    v_query := 'SELECT true FROM insert_log_atx( ' || quote_nullable(m) ||
-		 ',' || quote_nullable(procedure_name) || ')';
-    PERFORM PUBLIC.dblink_exec(my_dblink_name, v_query);
-
-    -- PERFORM * FROM dblink(v_conn_str, v_query) AS p (ret boolean);
-  END;
-  $$ LANGUAGE plpgsql;
+--   CREATE OR REPLACE FUNCTION insert_log_atx(text, text)
+--     RETURNS VOID AS $$
+--   DECLARE
+--     m ALIAS FOR $1;
+--     procedure_name ALIAS FOR $2;
+--     open_connections TEXT [] := PUBLIC.dblink_get_connections();
+--     --v_conn_str  text := 'port=5432 dbname=postgres host=ohdsi_v5.i3l.gatech.edu user=ohdsi_admin_user password=J4ckets_4_synpUf';
+--     v_conn_str  text := 'port=5432 dbname=postgres host=localhost user=kausarm password=Pass@123';
+--     v_query     text;
+--     my_dblink_name TEXT := 'logging_dblink' ;
+--   BEGIN
+--     IF open_connections IS NULL
+--        OR NOT open_connections @> ARRAY [ my_dblink_name ] THEN
+--         PERFORM PUBLIC.dblink_connect(
+--             my_dblink_name, v_conn_str);
+--         raise debug 'New db link connection made' ;
+--     ELSE
+--         raise debug 'Db link connection exists, re-using' ;
+--     END IF;
+--
+--     v_query := 'SELECT true FROM insert_log_atx( ' || quote_nullable(m) ||
+-- 		 ',' || quote_nullable(procedure_name) || ')';
+--     PERFORM PUBLIC.dblink_exec(my_dblink_name, v_query);
+--
+--     -- PERFORM * FROM dblink(v_conn_str, v_query) AS p (ret boolean);
+--   END;
+--   $$ LANGUAGE plpgsql;
 /*=========================================================================
   | CREATE OR REPLACE FUNCTION INS_SRC_DB_ATTRIBUTES
   |
@@ -580,7 +580,7 @@ RETURNS VOID AS $$
     num_rows              INTEGER;
     MESSAGE               text;
   BEGIN
-    --PERFORM pg_background_launch('SELECT insert_log(''Getting general Source Database Counts'', ''ins_src_db_attributes'');');
+
     PERFORM insert_log('Getting general Source Database Counts', 'ins_src_db_attributes');
     SELECT MIN(min_db_date)
     INTO db_min_date
@@ -615,7 +615,7 @@ RETURNS VOID AS $$
       || ', drug_eras_count=' || drug_eras_count;
 --     insert_log(MESSAGE, 'ins_src_db_attributes');
 
-    PERFORM 'TRUNCATE TABLE osim_src_db_attributes';
+    TRUNCATE TABLE osim_src_db_attributes;
 
     INSERT INTO osim_src_db_attributes
       (db_min_date, db_max_date, persons_count, condition_eras_count,
@@ -657,7 +657,7 @@ CREATE OR REPLACE FUNCTION ins_gender_probability()
   BEGIN
     PERFORM insert_log('Starting Gender Probability Analysis', 'ins_gender_probability');
 
-    PERFORM 'TRUNCATE TABLE osim_gender_probability';
+    TRUNCATE TABLE osim_gender_probability;
     --COMMIT;
     INSERT /*+ append nologging */ INTO osim_gender_probability
       (gender_concept_id, n, accumulated_probability)
@@ -722,7 +722,7 @@ CREATE OR REPLACE FUNCTION ins_age_at_obs_probability()
 
     PERFORM insert_log('Starting Age Probability Analysis', 'ins_age_at_obs_probability');
 
-    PERFORM 'TRUNCATE TABLE osim_age_at_obs_probability';
+    TRUNCATE TABLE osim_age_at_obs_probability;
     --COMMIT;
 
     INSERT /*+ append nologging */ INTO osim_age_at_obs_probability
@@ -792,7 +792,7 @@ CREATE OR REPLACE FUNCTION ins_age_at_obs_probability()
   BEGIN
     PERFORM insert_log('Starting Condition Concept Count Probability Analysis', 'ins_cond_count_probability');
 
-    PERFORM 'TRUNCATE TABLE osim_cond_count_probability';
+    TRUNCATE TABLE osim_cond_count_probability;
     --COMMIT;
 
     INSERT /*+ append nologging */ INTO osim_cond_count_probability
@@ -864,7 +864,7 @@ CREATE OR REPLACE FUNCTION ins_age_at_obs_probability()
   BEGIN
     PERFORM insert_log('Starting Observed Years Probability Analysis', 'ins_time_obs_probability');
 
-    PERFORM 'TRUNCATE TABLE osim_time_obs_probability';
+    TRUNCATE TABLE osim_time_obs_probability;
     --COMMIT;
 
     INSERT /*+ append nologging */ INTO osim_time_obs_probability
@@ -950,13 +950,13 @@ CREATE OR REPLACE FUNCTION ins_first_cond_probability()
 
     PERFORM insert_log('Starting First Condition Concept Probability Analysis', 'ins_first_cond_probability');
 
-    PERFORM 'TRUNCATE TABLE osim_first_cond_probability';
+    TRUNCATE TABLE osim_first_cond_probability;
     --COMMIT;
 
     -- Drop Indexes for Quicker Insertion
     BEGIN
-      PERFORM 'DROP INDEX osim_first_cond_ix1';
-      PERFORM 'DROP INDEX osim_first_cond_ix2';
+      DROP INDEX osim_first_cond_ix1;
+      DROP INDEX osim_first_cond_ix2;
     EXCEPTION
       WHEN OTHERS THEN
         PERFORM insert_log('Probability indexes are already removed', 'ins_first_cond_probability');
@@ -1037,20 +1037,16 @@ CREATE OR REPLACE FUNCTION ins_first_cond_probability()
 
     --COMMIT;
 
-    PERFORM '
+
       CREATE INDEX osim_first_cond_ix1 ON osim_first_cond_probability (
         condition1_concept_id, age_range, gender_concept_id,
         cond_count_bucket, time_remaining)
-      NOLOGGING PCTFREE 10 INITRANS 2 MAXTRANS 255 STORAGE (
-        INITIAL 10M NEXT 10M MINEXTENTS 1 MAXEXTENTS 2147483645
-        PCTINCREASE 0 FREELISTS 5 FREELIST GROUPS 5 BUFFER_POOL DEFAULT)';
+      WITH (FILLFACTOR = 90);
 
-    PERFORM '
+
       CREATE INDEX osim_first_cond_ix2
         ON osim_first_cond_probability (accumulated_probability)
-      NOLOGGING PCTFREE 10 INITRANS 2 MAXTRANS 255 STORAGE (
-        INITIAL 10M NEXT 10M MINEXTENTS 1 MAXEXTENTS 2147483645
-        PCTINCREASE 0 FREELISTS 5 FREELIST GROUPS 5 BUFFER_POOL DEFAULT)';
+      WITH (FILLFACTOR = 90);
 
     --COMMIT;
 
@@ -1102,13 +1098,13 @@ CREATE OR REPLACE FUNCTION ins_cond_days_before_prob()
     PERFORM insert_log('Starting Condition Concept Reoccurrence Probability Analysis',
       'ins_cond_reoccur_probability');
 
-    PERFORM 'TRUNCATE TABLE osim_cond_reoccur_probability';
+    TRUNCATE TABLE osim_cond_reoccur_probability;
     --COMMIT;
 
     -- Drop Indexes for Quicker Insertion
     BEGIN
-      PERFORM 'DROP INDEX osim_cond_reoccur_ix1';
-      PERFORM 'DROP INDEX osim_cond_reoccur_ix2';
+      DROP INDEX osim_cond_reoccur_ix1;
+      DROP INDEX osim_cond_reoccur_ix2;
     EXCEPTION
       WHEN OTHERS THEN
         PERFORM insert_log('Probability indexes are already removed',
@@ -1189,21 +1185,17 @@ CREATE OR REPLACE FUNCTION ins_cond_days_before_prob()
 
     --COMMIT;
 
-    PERFORM '
+
     CREATE INDEX osim_cond_reoccur_ix1 ON osim_cond_reoccur_probability (
       condition_concept_id,
       age_range,
       time_remaining)
-    NOLOGGING PCTFREE 10 INITRANS 2 MAXTRANS 255 STORAGE (
-      INITIAL 10M NEXT 10M MINEXTENTS 1 MAXEXTENTS 2147483645
-      PCTINCREASE 0 FREELISTS 10 FREELIST GROUPS 10 BUFFER_POOL DEFAULT)';
+    WITH (FILLFACTOR = 90);
 
-    PERFORM '
+
     CREATE INDEX osim_cond_reoccur_ix2 ON osim_cond_reoccur_probability (
       accumulated_probability)
-    NOLOGGING PCTFREE 10 INITRANS 2 MAXTRANS 255 STORAGE (
-      INITIAL 10M NEXT 10M MINEXTENTS 1 MAXEXTENTS 2147483645
-      PCTINCREASE 0 FREELISTS 10 FREELIST GROUPS 10 BUFFER_POOL DEFAULT)';
+    WITH (FILLFACTOR = 90);
 
     --COMMIT;
 
@@ -1252,13 +1244,13 @@ CREATE OR REPLACE FUNCTION ins_drug_count_prob()
     PERFORM insert_log('Starting Drug Concept Count Probability Analysis',
       'ins_drug_count_prob');
 
-    PERFORM 'TRUNCATE TABLE osim_drug_count_prob';
+    TRUNCATE TABLE osim_drug_count_prob;
 
     --COMMIT;
     -- Drop Indexes for Quicker Insertion
     BEGIN
-      PERFORM 'DROP INDEX osim_drug_count_prob_ix1';
-      PERFORM 'DROP INDEX osim_drug_count_prob_ix2';
+      DROP INDEX osim_drug_count_prob_ix1;
+      DROP INDEX osim_drug_count_prob_ix2;
     EXCEPTION
       WHEN OTHERS THEN
         PERFORM insert_log('Probability indexes are already removed',
@@ -1316,19 +1308,15 @@ CREATE OR REPLACE FUNCTION ins_drug_count_prob()
 
     --COMMIT;
 
-    PERFORM '
+
     CREATE INDEX osim_drug_count_prob_ix1 ON osim_drug_count_prob (
       gender_concept_id, age_bucket, condition_count_bucket)
-    NOLOGGING PCTFREE 10 INITRANS 2 MAXTRANS 255 STORAGE (
-      INITIAL 10M NEXT 10M MINEXTENTS 1 MAXEXTENTS 2147483645
-      PCTINCREASE 0 FREELISTS 10 FREELIST GROUPS 10 BUFFER_POOL DEFAULT)';
+    WITH (FILLFACTOR = 90);
 
-    PERFORM '
+
     CREATE INDEX osim_drug_count_prob_ix2
       ON osim_drug_count_prob (accumulated_probability)
-    NOLOGGING PCTFREE 10 INITRANS 2 MAXTRANS 255 STORAGE (
-      INITIAL 10M NEXT 10M MINEXTENTS 1 MAXEXTENTS 2147483645
-      PCTINCREASE 0 FREELISTS 10 FREELIST GROUPS 10 BUFFER_POOL DEFAULT)';
+    WITH (FILLFACTOR = 90);
 
 
     --COMMIT;
@@ -1380,13 +1368,13 @@ CREATE OR REPLACE FUNCTION ins_cond_drug_count_prob()
     PERFORM insert_log('Starting Condition Interval Drug Era Count Probability Analysis',
       'ins_cond_drug_count_prob');
 
-    PERFORM 'TRUNCATE TABLE osim_cond_drug_count_prob';
+    TRUNCATE TABLE osim_cond_drug_count_prob;
     --COMMIT;
 
     -- Drop Indexes for Quicker Insertion
     BEGIN
-      PERFORM 'DROP INDEX osim_cond_drug_count_prob_ix1';
-      PERFORM 'DROP INDEX osim_cond_drug_count_prob_ix2';
+      DROP INDEX osim_cond_drug_count_prob_ix1;
+      DROP INDEX osim_cond_drug_count_prob_ix2;
     EXCEPTION
       WHEN OTHERS THEN
         PERFORM insert_log('Probability indexes are already removed',
@@ -1545,20 +1533,16 @@ CREATE OR REPLACE FUNCTION ins_cond_drug_count_prob()
 
      --COMMIT;
 
-    PERFORM '
+
     CREATE INDEX osim_cond_drug_count_prob_ix1 ON osim_cond_drug_count_prob (
       condition_concept_id, interval_bucket, age_bucket, drug_count_bucket,
       condition_count_bucket)
-    NOLOGGING PCTFREE 10 INITRANS 2 MAXTRANS 255 STORAGE (
-      INITIAL 10M NEXT 10M MINEXTENTS 1 MAXEXTENTS 2147483645
-      PCTINCREASE 0 FREELISTS 10 FREELIST GROUPS 10 BUFFER_POOL DEFAULT)';
+    WITH (FILLFACTOR = 90);
 
-    PERFORM '
+
     CREATE INDEX osim_cond_drug_count_prob_ix2
       ON osim_cond_drug_count_prob (accumulated_probability)
-    NOLOGGING PCTFREE 10 INITRANS 2 MAXTRANS 255 STORAGE (
-      INITIAL 10M NEXT 10M MINEXTENTS 1 MAXEXTENTS 2147483645
-      PCTINCREASE 0 FREELISTS 10 FREELIST GROUPS 10 BUFFER_POOL DEFAULT)';
+    WITH (FILLFACTOR = 90);
 
     --COMMIT;
 
@@ -1611,13 +1595,13 @@ CREATE OR REPLACE FUNCTION ins_cond_first_drug_prob()
     PERFORM insert_log('Starting Condition Interval Drug Era Analysis',
       'ins_cond_first_drug_prob');
 
-    PERFORM 'TRUNCATE TABLE osim_cond_first_drug_prob';
+    TRUNCATE TABLE osim_cond_first_drug_prob;
 
     --COMMIT;
     -- Drop Indexes for Quicker Insertion
     BEGIN
-      PERFORM 'DROP INDEX osim_cond_drug_prob_ix1';
-      PERFORM 'DROP INDEX osim_cond_drug_prob_ix2';
+      DROP INDEX osim_cond_drug_prob_ix1;
+      DROP INDEX osim_cond_drug_prob_ix2;
     EXCEPTION
       WHEN OTHERS THEN
         PERFORM insert_log('Probability indexes are already removed',
@@ -1811,20 +1795,16 @@ CREATE OR REPLACE FUNCTION ins_cond_first_drug_prob()
 
     --COMMIT;
 
-    PERFORM '
+
     CREATE INDEX osim_cond_drug_prob_ix1 ON osim_cond_first_drug_prob (
       condition_concept_id, interval_bucket, age_bucket, condition_count_bucket,
       drug_count_bucket, day_cond_count, gender_concept_id)
-      NOLOGGING PCTFREE 10 INITRANS 2 MAXTRANS 255 STORAGE (
-        INITIAL 10M NEXT 10M MINEXTENTS 1 MAXEXTENTS 2147483645
-        PCTINCREASE 0 FREELISTS 10 FREELIST GROUPS 10 BUFFER_POOL DEFAULT)';
+      WITH (FILLFACTOR = 90);
 
-    PERFORM '
+
     CREATE INDEX osim_cond_drug_prob_ix2
       ON osim_cond_first_drug_prob (accumulated_probability)
-      NOLOGGING PCTFREE 10 INITRANS 2 MAXTRANS 255 STORAGE (
-        INITIAL 10M NEXT 10M MINEXTENTS 1 MAXEXTENTS 2147483645
-        PCTINCREASE 0 FREELISTS 10 FREELIST GROUPS 10 BUFFER_POOL DEFAULT)';
+      WITH (FILLFACTOR = 90);
 
     --COMMIT;
 
@@ -1872,13 +1852,13 @@ CREATE OR REPLACE FUNCTION ins_drug_era_count_prob()
     MESSAGE              text;
   BEGIN
     PERFORM insert_log('Starting Drug Era Count Analysis', 'ins_drug_era_count_prob');
-    PERFORM 'TRUNCATE TABLE osim_drug_era_count_prob';
+    TRUNCATE TABLE osim_drug_era_count_prob;
 
     --COMMIT;
     -- Drop Indexes for Quicker Insertion
     BEGIN
-      PERFORM 'DROP INDEX osim_drug_era_count_ix1';
-      PERFORM 'DROP INDEX osim_drug_era_count_ix2';
+      DROP INDEX osim_drug_era_count_ix1;
+      DROP INDEX osim_drug_era_count_ix2;
     EXCEPTION
       WHEN OTHERS THEN
         PERFORM insert_log('Probability indexes are already removed',
@@ -1948,23 +1928,19 @@ CREATE OR REPLACE FUNCTION ins_drug_era_count_prob()
 
     --COMMIT;
 
-    PERFORM '
+
       CREATE INDEX osim_drug_era_count_ix1 ON osim_drug_era_count_prob (
         drug_concept_id,
         drug_count_bucket,
         condition_count_bucket,
 		    age_range,
         time_remaining)
-      PCTFREE 10 INITRANS 2 MAXTRANS 255 NOLOGGING
-      STORAGE(INITIAL 65536 NEXT 1048576 MINEXTENTS 1 MAXEXTENTS 2147483645
-      PCTINCREASE 0 FREELISTS 5 FREELIST GROUPS 5 BUFFER_POOL DEFAULT)';
+      WITH (FILLFACTOR = 90);
 
-    PERFORM '
+
       CREATE INDEX osim_drug_era_count_ix2 ON osim_drug_era_count_prob (
         accumulated_probability)
-      PCTFREE 10 INITRANS 2 MAXTRANS 255 NOLOGGING
-      STORAGE(INITIAL 65536 NEXT 1048576 MINEXTENTS 1 MAXEXTENTS 2147483645
-      PCTINCREASE 0 FREELISTS 5 FREELIST GROUPS 5 BUFFER_POOL DEFAULT)';
+      WITH (FILLFACTOR = 90);
 
     --COMMIT;
 
@@ -2015,13 +1991,13 @@ CREATE OR REPLACE FUNCTION ins_drug_duration_probability()
     PERFORM insert_log('Starting Drug Concept Duration Probability Analysis',
       'ins_drug_duration_probability');
 
-    PERFORM 'TRUNCATE TABLE osim_drug_duration_probability';
+    TRUNCATE TABLE osim_drug_duration_probability;
     --COMMIT;
 
     -- Drop Indexes for Quicker Insertion
     BEGIN
-      PERFORM 'DROP INDEX osim_drug_duration_ix1';
-      PERFORM 'DROP INDEX osim_drug_duration_ix2';
+      DROP INDEX osim_drug_duration_ix1;
+      DROP INDEX osim_drug_duration_ix2;
     EXCEPTION
       WHEN OTHERS THEN
         PERFORM insert_log('Probability indexes are already removed',
@@ -2076,19 +2052,15 @@ CREATE OR REPLACE FUNCTION ins_drug_duration_probability()
     raise debug 'Inserted ins_drug_duration_probability, rows %', num_rows;
     --COMMIT;
 
-    PERFORM '
+
     CREATE INDEX osim_drug_duration_ix1 ON osim_drug_duration_probability (
       drug_concept_id, time_remaining, drug_era_count, total_exposure)
-    NOLOGGING PCTFREE 10 INITRANS 2 MAXTRANS 255 STORAGE (
-      INITIAL 10M NEXT 10M MINEXTENTS 1 MAXEXTENTS 2147483645
-      PCTINCREASE 0 FREELISTS 10 FREELIST GROUPS 10 BUFFER_POOL DEFAULT)';
+    WITH (FILLFACTOR = 90);
 
-    PERFORM '
+
     CREATE INDEX osim_drug_duration_ix2 ON osim_drug_duration_probability (
       accumulated_probability)
-    NOLOGGING PCTFREE 10 INITRANS 2 MAXTRANS 255 STORAGE (
-      INITIAL 10M NEXT 10M MINEXTENTS 1 MAXEXTENTS 2147483645
-      PCTINCREASE 0 FREELISTS 10 FREELIST GROUPS 10 BUFFER_POOL DEFAULT)';
+    WITH (FILLFACTOR = 90);
 
      --COMMIT;
 
@@ -2135,12 +2107,12 @@ CREATE OR REPLACE FUNCTION drop_osim_indexes()
       'drop_osim_indexes');
 
     BEGIN
-      PERFORM 'DROP INDEX xn_cond_era_concept_id';
-      PERFORM 'DROP INDEX xn_cond_era_person_id';
-      PERFORM 'DROP INDEX xn_cond_era_start_date';
-      PERFORM 'DROP INDEX xn_drug_era_concept_id';
-      PERFORM 'DROP INDEX xn_drug_era_person_id';
-      PERFORM 'DROP INDEX xn_drug_era_start_date';
+      DROP INDEX xn_cond_era_concept_id;
+      DROP INDEX xn_cond_era_person_id;
+      DROP INDEX xn_cond_era_start_date;
+      DROP INDEX xn_drug_era_concept_id;
+      DROP INDEX xn_drug_era_person_id;
+      DROP INDEX xn_drug_era_start_date;
     EXCEPTION
       WHEN OTHERS THEN
         PERFORM insert_log('Simulated data indexes are already removed',
@@ -2168,43 +2140,32 @@ CREATE OR REPLACE FUNCTION create_osim_indexes()
       'create_osim_indexes');
 
     BEGIN
-      PERFORM '
+
       CREATE INDEX xn_cond_era_concept_id
         ON osim_condition_era (condition_concept_id ASC)
-      NOLOGGING PCTFREE 10 INITRANS 2 MAXTRANS 255 STORAGE (
-      INITIAL 10M NEXT 10M MINEXTENTS 1 MAXEXTENTS 2147483645
-      PCTINCREASE 0 FREELISTS 5 FREELIST GROUPS 5 BUFFER_POOL DEFAULT)';
+      WITH (FILLFACTOR = 90);
 
-      PERFORM '
+
       CREATE INDEX xn_cond_era_person_id ON osim_condition_era (person_id ASC)
-      NOLOGGING PCTFREE 10 INITRANS 2 MAXTRANS 255 STORAGE (
-      INITIAL 10M NEXT 10M MINEXTENTS 1 MAXEXTENTS 2147483645
-      PCTINCREASE 0 FREELISTS 5 FREELIST GROUPS 5 BUFFER_POOL DEFAULT)';
+      WITH (FILLFACTOR = 90);
 
-      PERFORM '
+
       CREATE INDEX xn_cond_era_start_date
         ON osim_condition_era (condition_era_start_date ASC)
-      NOLOGGING PCTFREE 10 INITRANS 2 MAXTRANS 255 STORAGE (
-      INITIAL 10M NEXT 10M MINEXTENTS 1 MAXEXTENTS 2147483645
-      PCTINCREASE 0 FREELISTS 5 FREELIST GROUPS 5 BUFFER_POOL DEFAULT)';
+      WITH (FILLFACTOR = 90);
 
-      PERFORM '
+
       CREATE INDEX xn_drug_era_concept_id ON osim_drug_era (drug_concept_id ASC)
-      NOLOGGING PCTFREE 10 INITRANS 2 MAXTRANS 255 STORAGE (
-      INITIAL 10M NEXT 10M MINEXTENTS 1 MAXEXTENTS 2147483645
-      PCTINCREASE 0 FREELISTS 5 FREELIST GROUPS 5 BUFFER_POOL DEFAULT)';
+      WITH (FILLFACTOR = 90);
 
-      PERFORM '
+
       CREATE INDEX xn_drug_era_person_id ON osim_drug_era (person_id ASC)
-      NOLOGGING PCTFREE 10 INITRANS 2 MAXTRANS 255 STORAGE (
-      INITIAL 10M NEXT 10M MINEXTENTS 1 MAXEXTENTS 2147483645
-      PCTINCREASE 0 FREELISTS 5 FREELIST GROUPS 5 BUFFER_POOL DEFAULT)';
+      WITH (FILLFACTOR = 90);
 
-      PERFORM '
+
       CREATE INDEX xn_drug_era_start_date ON osim_drug_era (drug_era_start_date ASC)
-      NOLOGGING PCTFREE 10 INITRANS 2 MAXTRANS 255 STORAGE (
-      INITIAL 10M NEXT 10M MINEXTENTS 1 MAXEXTENTS 2147483645
-      PCTINCREASE 0 FREELISTS 5 FREELIST GROUPS 5 BUFFER_POOL DEFAULT)';
+      WITH (FILLFACTOR = 90);
+
     EXCEPTION
       WHEN OTHERS THEN
         PERFORM insert_log('Simulated data indexes already exist',
@@ -2334,13 +2295,13 @@ CREATE OR REPLACE FUNCTION ins_cond_era_count_prob()
     num_rows              INTEGER;
   BEGIN
     PERFORM insert_log('Starting Condition Era Count Analysis', 'ins_cond_era_count_prob');
-    PERFORM  'TRUNCATE TABLE osim_cond_era_count_prob';
+     TRUNCATE TABLE osim_cond_era_count_prob;
     --COMMIT;
 
     -- Drop Indexes for Quicker Insertion
     BEGIN
-      PERFORM 'DROP INDEX osim_cond_era_count_ix1';
-      PERFORM 'DROP INDEX osim_cond_era_count_ix2';
+       DROP INDEX osim_cond_era_count_ix1;
+       DROP INDEX osim_cond_era_count_ix2;
     EXCEPTION
       WHEN OTHERS THEN
         PERFORM insert_log('Probability indexes are already removed',
@@ -2393,21 +2354,17 @@ CREATE OR REPLACE FUNCTION ins_cond_era_count_prob()
     MESSAGE := num_rows || ' rows inserted into osim_cond_era_count_prob.';
     PERFORM insert_log(MESSAGE, 'ins_cond_era_count_prob');
 
-    PERFORM '
+
       CREATE INDEX osim_cond_era_count_ix1 ON osim_cond_era_count_prob (
         condition_concept_id,
         cond_count_bucket,
         time_remaining)
-      PCTFREE 10 INITRANS 2 MAXTRANS 255 NOLOGGING
-      STORAGE(INITIAL 65536 NEXT 1048576 MINEXTENTS 1 MAXEXTENTS 2147483645
-      PCTINCREASE 0 FREELISTS 5 FREELIST GROUPS 5 BUFFER_POOL DEFAULT)';
+      WITH (FILLFACTOR = 90);
 
-    PERFORM '
+
       CREATE INDEX osim_cond_era_count_ix2 ON osim_cond_era_count_prob (
         accumulated_probability)
-      PCTFREE 10 INITRANS 2 MAXTRANS 255 NOLOGGING
-      STORAGE(INITIAL 65536 NEXT 1048576 MINEXTENTS 1 MAXEXTENTS 2147483645
-      PCTINCREASE 0 FREELISTS 5 FREELIST GROUPS 5 BUFFER_POOL DEFAULT)';
+      WITH (FILLFACTOR = 90);
 
     --COMMIT;
 
@@ -2777,10 +2734,9 @@ $$ LANGUAGE plpgsql;
 
   BEGIN
     -- Clear existing condition concepts for new person
-    DROP TABLE IF EXISTS this_person_conditions_table;
-    CREATE TEMPORARY TABLE this_person_conditions_table (
-      condition_concept_id INTEGER NOT NULL
-    ) ON COMMIT DELETE ROWS;
+--     DROP TABLE IF EXISTS this_person_conditions_table;
+
+     TRUNCATE TABLE this_person_conditions_table;
 
     this_person_cond_count := 0;
     this_person_era_count := 0;
@@ -2857,7 +2813,7 @@ $$ LANGUAGE plpgsql;
       -- Randomize from returned days bucket
       this_cond_delta_days := (osim__randomize_days(this_cond_delta_days));
 
-      -- If the person already has this conditon concept,
+      -- If the person already has this condition concept,
       --   do not add it again
 
       IF this_cond_concept >= 0
@@ -3074,10 +3030,9 @@ $$ LANGUAGE plpgsql;
     --   Drugs are simulated from the person's Conditons
 
     -- Clear existing condition and drug concepts for new person
-    DROP TABLE IF EXISTS this_person_drugs_table;
-    CREATE TEMPORARY TABLE this_person_drugs_table (
-      drug_concept_id INTEGER NOT NULL
-    ) ON COMMIT DELETE ROWS;
+    --     DROP TABLE IF EXISTS this_person_drugs_table;
+
+     TRUNCATE TABLE this_person_drugs_table;
 
 
     -- Draw for person's Distinct Drug Concept count
@@ -3516,34 +3471,48 @@ $$ LANGUAGE plpgsql;
     osim_db_persons, drug_persistence, cond_persistence;
 
     -- Create temp tables to store simulation for each person
+    --===================================================================
+    --TEMP TABLES
+    --===================================================================
+
+    DROP TABLE IF EXISTS this_person_drugs_table;
+    CREATE TEMPORARY TABLE this_person_drugs_table (
+      drug_concept_id INTEGER NOT NULL
+    ) ON COMMIT DELETE ROWS;
+    CREATE INDEX drug_id_index ON this_person_drugs_table (drug_concept_id);
+
+    DROP TABLE IF EXISTS this_person_conditions_table;
+    CREATE TEMPORARY TABLE this_person_conditions_table (
+      condition_concept_id INTEGER NOT NULL
+    ) ON COMMIT DELETE ROWS;
+    CREATE INDEX condition_id_index ON this_person_conditions_table (condition_concept_id);
 
     DROP TABLE IF EXISTS osim_tmp_outcome;
     CREATE TEMPORARY TABLE osim_tmp_outcome (
-      person_id NUMERIC(12, 0) NOT NULL,
-      drug_era_id NUMERIC(12, 0) NOT NULL,
-      condition_era_id NUMERIC(12, 0) NOT NULL
-    ) ON COMMIT DELETE ROWS;
-
+          person_id NUMERIC(12, 0) NOT NULL,
+          drug_era_id NUMERIC(12, 0) NOT NULL,
+          condition_era_id NUMERIC(12, 0) NOT NULL
+        ) ON COMMIT DELETE ROWS;
 
     DROP TABLE IF EXISTS osim_tmp_condition_era;
     CREATE TEMPORARY TABLE osim_tmp_condition_era (
-      condition_era_id NUMERIC(15, 0) NOT NULL,
-      condition_era_start_date DATE,
-      person_id NUMERIC(12, 0) NOT NULL,
-      confidence NUMERIC,
-      condition_era_end_date DATE,
-      condition_concept_id NUMERIC(15, 0),
-      condition_occurrence_count NUMERIC(5, 0)
-    ) ON COMMIT DELETE ROWS;
+          condition_era_id NUMERIC(15, 0) NOT NULL,
+          condition_era_start_date DATE,
+          person_id NUMERIC(12, 0) NOT NULL,
+          confidence NUMERIC,
+          condition_era_end_date DATE,
+          condition_concept_id NUMERIC(15, 0),
+          condition_occurrence_count NUMERIC(5, 0)
+        ) ON COMMIT DELETE ROWS;
 
     DROP TABLE IF EXISTS osim_tmp_drug_era;
     CREATE TEMPORARY TABLE osim_tmp_drug_era (
-      drug_era_start_date DATE,
-      drug_era_end_date DATE,
-      person_id NUMERIC(12, 0) NOT NULL,
-      drug_concept_id NUMERIC(15, 0),
-      drug_exposure_count NUMERIC(5, 0)
-    ) ON COMMIT DELETE ROWS;
+          drug_era_start_date DATE,
+          drug_era_end_date DATE,
+          person_id NUMERIC(12, 0) NOT NULL,
+          drug_concept_id NUMERIC(15, 0),
+          drug_exposure_count NUMERIC(5, 0)
+        ) ON COMMIT DELETE ROWS;
 
     -- Start the simulation
     person_index := 1;
@@ -3551,11 +3520,11 @@ $$ LANGUAGE plpgsql;
     LOOP
 
       --
-      -- Truncate tables (clear previous entries)
+      -- Truncate tables (clear previous entries) - Not necessary due to where condition
       --
-      PERFORM 'TRUNCATE TABLE osim_tmp_condition_era';
-      PERFORM 'TRUNCATE TABLE osim_tmp_drug_era';
-      PERFORM 'TRUNCATE TABLE osim_tmp_outcome';
+--        TRUNCATE TABLE osim_tmp_condition_era;
+--        TRUNCATE TABLE osim_tmp_drug_era;
+--        TRUNCATE TABLE osim_tmp_outcome;
 
       --
       -- Create osim person
@@ -4087,8 +4056,9 @@ CREATE OR REPLACE FUNCTION ins_outcomes()
   END; 
 $$ LANGUAGE plpgsql;
 
-
--- Procedures
+-- ============================
+-- Procedure Occurence
+-- ============================
 
 CREATE OR REPLACE FUNCTION ins_sim_procedures (
   /*=========================================================================

@@ -63,7 +63,7 @@
 --================================================================================
 -- TABLE osim_condition_era
 --================================================================================
-SET search_path TO synthetic_data_generation_mimic;
+SET search_path TO synthetic_data_generation_test, public;
 
 DROP TABLE IF EXISTS osim_condition_era;
 CREATE UNLOGGED TABLE osim_condition_era (
@@ -151,7 +151,29 @@ CREATE INDEX xn_drug_era_person_id ON osim_drug_era (person_id ASC)
   WITH (FILLFACTOR = 90);
 CREATE INDEX xn_drug_era_start_date ON osim_drug_era (drug_era_start_date ASC)
   WITH (FILLFACTOR = 90);
-   
+
+--================================================================================
+-- TABLE osim_procedure_occurrence
+--================================================================================
+DROP TABLE IF EXISTS osim_procedure_occurrence CASCADE;
+CREATE UNLOGGED TABLE osim_procedure_occurrence
+(
+  procedure_occurrence_id NUMERIC(15, 0) NOT NULL,
+  procedure_date DATE,
+  person_id NUMERIC(12, 0) NOT NULL,
+  procedure_concept_id NUMERIC(15, 0),
+  quantity NUMERIC(5, 0)
+)
+WITH (OIDS= TRUE, FILLFACTOR = 90);
+--COMPRESS;
+
+CREATE INDEX xn_procedure_occurrence_concept_id ON osim_procedure_occurrence (procedure_concept_id ASC)
+  WITH (FILLFACTOR = 90);
+CREATE INDEX xn_procedure_occurrence_person_id ON osim_procedure_occurrence (person_id ASC)
+  WITH (FILLFACTOR = 90);
+CREATE INDEX xn_procedure_occurrence_start_date ON osim_procedure_occurrence (procedure_date ASC)
+  WITH (FILLFACTOR = 90);
+
 --================================================================================
 -- TABLE osim_drug_outcome
 --================================================================================
@@ -236,7 +258,8 @@ CREATE UNLOGGED TABLE osim_src_db_attributes (
   db_max_date DATE, 
   persons_count NUMERIC(15,0), 
   condition_eras_count NUMERIC(15,0),
-  drug_eras_count NUMERIC(15,0)
+  drug_eras_count NUMERIC(15,0),
+  procedure_occurrences_count NUMERIC(15, 0)
 ) WITH OIDS;
  
 --================================================================================
@@ -369,6 +392,26 @@ CREATE INDEX osim_drug_count_prob_ix1 ON osim_drug_count_prob (
   WITH (FILLFACTOR = 90);
     
 CREATE INDEX osim_drug_count_prob_ix2 ON osim_drug_count_prob (accumulated_probability)
+  WITH (FILLFACTOR = 90);
+
+--================================================================================
+-- TABLE osim_procedure_count_prob
+--================================================================================
+DROP TABLE IF EXISTS osim_procedure_count_prob;
+CREATE UNLOGGED TABLE osim_procedure_count_prob(
+  gender_concept_id NUMERIC(15,0),
+  age_bucket NUMERIC(5,0),
+  condition_count_bucket NUMERIC(5,0),
+  procedure_count NUMERIC(5,0),
+  n NUMERIC(10,0),
+	accumulated_probability FLOAT
+) WITH OIDS;
+
+CREATE INDEX osim_procedure_count_prob_ix1 ON osim_procedure_count_prob (
+  gender_concept_id, age_bucket, condition_count_bucket)
+  WITH (FILLFACTOR = 90);
+
+CREATE INDEX osim_procedure_count_prob_ix2 ON osim_procedure_count_prob (accumulated_probability)
   WITH (FILLFACTOR = 90);
 
 --================================================================================
@@ -505,7 +548,6 @@ DROP TABLE IF EXISTS osim_procedure_occurrence_count_prob;
   age_range NUMERIC(3,0),
   time_remaining NUMERIC(3,0),
 	procedure_occurrence_count NUMERIC(5,0),
-  total_exposure NUMERIC(5,0),
   n NUMERIC(10,0),
 	accumulated_probability FLOAT)
   WITH (OIDS= TRUE, FILLFACTOR = 90);

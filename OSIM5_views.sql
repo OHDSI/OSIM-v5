@@ -60,7 +60,7 @@
 
 --================================================================================
 -- Step 1. Adjust search path to destination schema as necessary
-SET search_path TO synthetic_data_generation_mimic, public;
+SET search_path TO synthetic_data_generation_test, public;
 
 --================================================================================
 -- Set 2. Edit views/schema to point to source tables
@@ -107,6 +107,14 @@ cond_counts AS
   FROM v_src_person person
   INNER JOIN s_condition_era condition_era ON person.person_id = condition_era.person_id
   GROUP BY person.person_id),
+  procedure_counts AS
+ (SELECT
+    person.person_id,
+    COUNT (DISTINCT procedure_concept_id) AS procedures
+  FROM v_src_person person
+  INNER JOIN s_procedure_occurrence procedure_occurence ON person.person_id = procedure_occurence.person_id
+  GROUP BY person.person_id),
+
 person_strata AS
  (SELECT /*+ NO_PARALLEL (person) */ 
     person.person_id, person.year_of_birth, person.gender_concept_id, person.race_concept_id, person.ethnicity_concept_id,
@@ -123,10 +131,12 @@ SELECT strata.person_id, strata.year_of_birth, strata.gender_concept_id, strata.
   strata.location_id, strata.gender_source_concept_id, strata.race_source_concept_id, strata.ethnicity_source_concept_id,
   strata.observation_period_start_date, strata.observation_period_end_date, strata.age, strata.obs_duration_days,
   coalesce(cond.conditions,0) AS condition_concepts,
-  coalesce(drug.drugs,0) AS drug_concepts
+  coalesce(drug.drugs,0) AS drug_concepts,
+  coalesce(procedure.procedures,0) AS procedure_concepts
 FROM person_strata strata
   LEFT JOIN cond_counts cond ON strata.person_id = cond.person_id 
-  LEFT JOIN drug_counts drug ON strata.person_id = drug.person_id ;
+  LEFT JOIN drug_counts drug ON strata.person_id = drug.person_id
+  LEFT JOIN procedure_counts procedure ON strata.person_id = procedure.person_id;
 
 --================================================================================
 -- VIEW v_observation_period

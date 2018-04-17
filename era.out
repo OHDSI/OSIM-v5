@@ -1,0 +1,28 @@
+psql: warning: extra command-line argument "Jowdyerb+5quad" ignored
+psql: warning: extra command-line argument "Jowdyerb+5quad" ignored
+psql: warning: extra command-line argument "Jowdyerb+5quad" ignored
+psql: FATAL:  password authentication failed for user "hdap"
+psql: warning: extra command-line argument "Jowdyerb+5quad" ignored
+SET
+psql:generate_era.sql:53: NOTICE:  table "ctedrugtarget" does not exist, skipping
+DROP TABLE
+SELECT 68196661
+psql:generate_era.sql:76: NOTICE:  table "cteenddates" does not exist, skipping
+DROP TABLE
+SELECT 28321242
+psql:generate_era.sql:145: NOTICE:  table "ctedrugexpends" does not exist, skipping
+DROP TABLE
+SELECT 67559023
+psql:generate_era.sql:181: ERROR:  duplicate key value violates unique constraint "xpk_drug_era"
+DETAIL:  Key (drug_era_id)=(1) already exists.
+psql:generate_era.sql:186: NOTICE:  table "condition_era_phase_1" does not exist, skipping
+DROP TABLE
+psql:generate_era.sql:188: NOTICE:  table "cteconditiontarget" does not exist, skipping
+DROP TABLE
+SELECT 74856034
+psql:generate_era.sql:205: NOTICE:  table "ctecondenddates" does not exist, skipping
+DROP TABLE
+psql:generate_era.sql:272: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+psql:generate_era.sql:272: connection to server was lost

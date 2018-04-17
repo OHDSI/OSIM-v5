@@ -79,13 +79,11 @@
 -- TODO
 
 -- Outcome/risk function update
--- Condition era may be unstable
 -- Fix logging (issue due to PostgreSQL i.e. no autonomous transactions)
--- Check memory usage
 --================================================================================
 
 
-SET SEARCH_PATH TO synthetic_data_generation, public;
+SET SEARCH_PATH TO synthetic_data_generation_test, public;
 CREATE EXTENSION tablefunc; -- for norm_random function
 
 DROP TYPE IF EXISTS COND_TRANSITION CASCADE;
@@ -574,7 +572,7 @@ RETURNS VOID AS $$
     persons_count         INTEGER;
     condition_eras_count  INTEGER;
     drug_eras_count       INTEGER;
-
+    procedure_occurrences_count INTEGER;
 --     db_cond_era_type_code VARCHAR(3);
 --     db_drug_era_type_code VARCHAR(3);
     num_rows              INTEGER;
@@ -606,11 +604,14 @@ RETURNS VOID AS $$
     INTO drug_eras_count
     FROM v_src_drug_era1_ids drug;
 
+    SELECT COUNT(DISTINCT procedure.procedure_occurrence_id)
+    INTO procedure_occurrences_count
+    FROM v_src_procedure_occurrence1_ids procedure;
+
     MESSAGE := 'Source CDM Attributes:'
       || ' db_min_date=' || db_min_date
       || ', db_max_date=' || db_max_date
       || ', persons_count=' || persons_count
---       || ', drug_exposure_type=' || db_drug_era_type_code
       || ', condition_eras_count=' || condition_eras_count
       || ', drug_eras_count=' || drug_eras_count;
 --     insert_log(MESSAGE, 'ins_src_db_attributes');
@@ -619,10 +620,9 @@ RETURNS VOID AS $$
 
     INSERT INTO osim_src_db_attributes
       (db_min_date, db_max_date, persons_count, condition_eras_count,
-       drug_eras_count)
+       drug_eras_count, procedure_occurrences_count)
     SELECT db_min_date, db_max_date, persons_count, condition_eras_count,
-      drug_eras_count;
---       ,db_cond_era_type_code
+      drug_eras_count, procedure_occurrences_count;
 
     GET DIAGNOSTICS num_rows = ROW_COUNT;
     MESSAGE := num_rows || ' rows inserted into osim_src_db_attributes.';
@@ -840,6 +840,8 @@ CREATE OR REPLACE FUNCTION ins_age_at_obs_probability()
   EXCEPTION
     WHEN OTHERS THEN
     PERFORM insert_log('Exception', 'ins_cond_count_probability');
+    GET STACKED DIAGNOSTICS MESSAGE = PG_EXCEPTION_CONTEXT;
+    RAISE NOTICE 'context: >>%<<', MESSAGE;
     raise notice '% %', SQLERRM, SQLSTATE;
 
   END;
@@ -1222,6 +1224,151 @@ CREATE OR REPLACE FUNCTION ins_cond_days_before_prob()
   END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION ins_procedure_days_before_prob()
+  /*=========================================================================
+  | PROCEDURE ins_procedure_days_before_prob
+  |
+  | Pr(Days Until | procedure, Age Bucket, Time Remaining)
+  |
+  | Analyze source CDM database and store results for:
+  |   INTEGER of days from Prior procedure occurrence (for same procedure Concept)
+  |   Based on procedure, Age, and Full Semi-years Remaining in
+  |     Person's Observation Period
+  |
+  |==========================================================================
+  */
+  RETURNS VOID AS $$
+  DECLARE
+    num_rows INTEGER;
+    MESSAGE              text;
+  BEGIN
+    PERFORM insert_log('Starting Procedure Concept Reoccurrence Probability Analysis',
+      'ins_procedure_reoccur_probability');
+
+    TRUNCATE TABLE osim_procedure_reoccur_probability;
+    --COMMIT;
+
+    -- Drop Indexes for Quicker Insertion
+    BEGIN
+      DROP INDEX osim_procedure_reoccur_ix1;
+      DROP INDEX osim_procedure_reoccur_ix2;
+    EXCEPTION
+      WHEN OTHERS THEN
+        PERFORM insert_log('Probability indexes are already removed',
+            'ins_procedure_reoccur_probability');
+    END;
+
+    --COMMIT;
+
+    INSERT /*+ append nologging */ INTO osim_procedure_reoccur_probability
+    (procedure_concept_id, age_range, time_remaining,
+     delta_days, n, accumulated_probability)
+      SELECT
+        procedure_concept_id,
+        age_range,
+        time_remaining,
+        delta_days,
+        n,
+        SUM(probability)
+          OVER
+           (PARTITION BY
+              --gender_concept_id,
+              age_range,
+              time_remaining,
+              procedure_concept_id
+            ORDER BY probability DESC
+              ROWS UNBOUNDED PRECEDING) accumulated_probability
+      FROM
+       (SELECT
+          --gender_concept_id,
+          age_range,
+          time_remaining,
+          procedure_concept_id,
+          delta_days,
+          occurrences AS n,
+          1.0 * occurrences/ NULLIF(SUM(occurrences)
+                                OVER(PARTITION BY age_range, time_remaining, procedure_concept_id), 0)
+            AS probability
+        FROM
+         (SELECT
+            --gender_concept_id,
+            age_range,
+            time_remaining,
+            procedure_concept_id,
+            delta_days,
+            count(procedure_occurrence_id) AS occurrences
+          FROM
+           (SELECT
+              procedure_occurrence_id,
+              procedure_concept_id,
+              osim__age_bucket(age + (prior_start - this_start) / 365.25)
+                AS age_range,
+              osim__time_observed_bucket(observation_period_end_date - prior_start)
+                AS time_remaining,
+              osim__round_days(this_start - prior_start) AS delta_days
+            FROM
+             (SELECT
+                person.age,
+                procedure.procedure_occurrence_id,
+                procedure.procedure_concept_id,
+                coalesce(LAG(procedure.procedure_date,1)
+                  OVER ( PARTITION BY person.person_id, procedure.procedure_concept_id
+                         ORDER BY procedure.procedure_date),
+                          person.observation_period_start_date) AS prior_start,
+                procedure.procedure_date AS this_start,
+                person.observation_period_end_date
+              FROM v_src_person_strata person
+              INNER JOIN v_src_procedure_occurrence1 procedure
+                ON person.person_id = procedure.person_id) t1
+           ) t2
+          GROUP BY age_range, time_remaining, procedure_concept_id, delta_days) t3
+       ) t4
+      ORDER BY 1,2,3,6;
+
+    GET DIAGNOSTICS num_rows = ROW_COUNT;
+    MESSAGE := num_rows || ' rows inserted into osim_procedure_reoccur_probability.';
+    PERFORM insert_log(MESSAGE, 'ins_procedure_reoccur_probability');
+    raise debug 'Inserted ins_procedure_reoccur_probability, rows = %', num_rows;
+
+    --COMMIT;
+
+
+    CREATE INDEX osim_procedure_reoccur_ix1 ON osim_procedure_reoccur_probability (
+      procedure_concept_id,
+      age_range,
+      time_remaining)
+    WITH (FILLFACTOR = 90);
+
+
+    CREATE INDEX osim_procedure_reoccur_ix2 ON osim_procedure_reoccur_probability (
+      accumulated_probability)
+    WITH (FILLFACTOR = 90);
+
+    --COMMIT;
+
+    -- a few of the last buckets may not quite add up to 1.0
+    UPDATE osim_procedure_reoccur_probability
+    SET accumulated_probability = 1.0
+    WHERE oid IN
+     (SELECT DISTINCT
+        FIRST_VALUE(oid)
+          OVER
+           (PARTITION BY procedure_concept_id, age_range, time_remaining
+            ORDER BY accumulated_probability DESC)
+      FROM osim_procedure_reoccur_probability);
+
+    --COMMIT;
+
+    PERFORM insert_log('Processing complete', 'ins_procedure_reoccur_probability');
+    raise debug 'Processing complete ins_procedure_reoccur_probability';
+
+    EXCEPTION
+    WHEN OTHERS THEN
+    PERFORM insert_log('Exception', 'ins_procedure_reoccur_probability');
+
+  END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION ins_drug_count_prob()
   /*=========================================================================
   | PROCEDURE ins_drug_count_prob
@@ -1339,6 +1486,129 @@ CREATE OR REPLACE FUNCTION ins_drug_count_prob()
     EXCEPTION
       WHEN OTHERS THEN
       PERFORM insert_log('Exception', 'ins_drug_count_prob');
+  END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION ins_procedure_count_prob()
+  /*=========================================================================
+  | PROCEDURE ins_procedure_count_prob
+  |
+  | Pr(Procedure Concept Count | Gender, Age Bucket, Condition Concept Count Bucket)
+  |
+  | Analyze source CDM database and store results for:
+  |   INTEGER of Distinct Procedure Concepts based on Person's INTEGER of
+  |   Gender
+  |   Age
+  |   Distinct Condition Count Bucket
+  |
+  |==========================================================================
+  */
+  RETURNS VOID AS $$
+  DECLARE
+    num_rows INTEGER;
+    MESSAGE              text;
+  BEGIN
+    PERFORM insert_log('Starting Procedure Concept Count Probability Analysis',
+      'ins_procedure_count_prob');
+
+    TRUNCATE TABLE osim_procedure_count_prob;
+
+    --COMMIT;
+    -- Drop Indexes for Quicker Insertion
+    BEGIN
+      DROP INDEX osim_procedure_count_prob_ix1;
+      DROP INDEX osim_procedure_count_prob_ix2;
+    EXCEPTION
+      WHEN OTHERS THEN
+        PERFORM insert_log('Probability indexes are already removed',
+            'ins_procedure_count_prob');
+    END;
+
+    --COMMIT;
+
+    INSERT /*+ append nologging */ INTO osim_procedure_count_prob
+    ( gender_concept_id, age_bucket, condition_count_bucket,
+      procedure_count, n, accumulated_probability )
+    SELECT
+      gender_concept_id,
+      age_bucket,
+      condition_count_bucket,
+      procedure_concepts AS procedure_count,
+      n,
+      SUM(probability)
+        OVER
+         (PARTITION BY gender_concept_id, age_bucket, condition_count_bucket
+          ORDER BY probability DESC
+            ROWS UNBOUNDED PRECEDING) accumulated_probability
+    FROM
+     (SELECT
+        gender_concept_id,
+        age_bucket,
+        condition_count_bucket,
+        procedure_concepts,
+        persons AS n,
+        1.0 * persons/ NULLIF(SUM(persons)
+                                OVER(PARTITION BY gender_concept_id, age_bucket, condition_count_bucket), 0)
+            AS probability
+      FROM
+       (SELECT
+          gender_concept_id,
+          age_bucket,
+          condition_count_bucket,
+          procedure_concepts,
+          COUNT(person_id) AS persons
+        FROM
+         (SELECT
+            person_id,
+            gender_concept_id,
+            osim__age_bucket(age) AS age_bucket,
+            osim__condition_count_bucket(condition_concepts) AS condition_count_bucket,
+            procedure_concepts
+          FROM v_src_person_strata person) t1
+        GROUP BY gender_concept_id, age_bucket, condition_count_bucket, procedure_concepts) t2
+     ) t3;
+
+    GET DIAGNOSTICS num_rows = ROW_COUNT;
+    MESSAGE := num_rows || ' rows inserted into osim_drug_count_prob.';
+    PERFORM insert_log(MESSAGE, 'ins_drug_count_prob');
+    raise debug 'Inserted ins_drug_count_prob, rows = %', num_rows;
+
+    --COMMIT;
+
+
+    CREATE INDEX osim_procedure_count_prob_ix1 ON osim_procedure_count_prob (
+      gender_concept_id, age_bucket, condition_count_bucket)
+    WITH (FILLFACTOR = 90);
+
+
+    CREATE INDEX osim_procedure_count_prob_ix2
+      ON osim_procedure_count_prob (accumulated_probability)
+    WITH (FILLFACTOR = 90);
+
+
+    --COMMIT;
+    -- a few of the last buckets may not quite add up to 1.0
+    UPDATE osim_procedure_count_prob
+    SET accumulated_probability = 1.0
+    WHERE oid IN
+     (SELECT DISTINCT
+        FIRST_VALUE(oid)
+          OVER
+           (PARTITION BY gender_concept_id, age_bucket, condition_count_bucket
+            ORDER BY accumulated_probability DESC)
+      FROM osim_procedure_count_prob);
+
+     --COMMIT;
+
+    PERFORM insert_log('Processing complete', 'ins_procedure_count_prob');
+    raise debug 'Processing complete ins_procedure_count_prob';
+
+    EXCEPTION
+      WHEN OTHERS THEN
+      PERFORM insert_log('Exception', 'ins_procedure_count_prob');
+      GET STACKED DIAGNOSTICS MESSAGE = PG_EXCEPTION_CONTEXT;
+      RAISE NOTICE 'context: >>%<<', MESSAGE;
+      raise notice '% %', SQLERRM, SQLSTATE;
   END;
 $$ LANGUAGE plpgsql;
 
@@ -1565,6 +1835,234 @@ CREATE OR REPLACE FUNCTION ins_cond_drug_count_prob()
     EXCEPTION
     WHEN OTHERS THEN
     PERFORM insert_log('Exception', 'ins_cond_drug_count_prob');
+  raise notice 'Processing complete ins_cond_count_probability, rows = %', num_rows;
+
+  END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION ins_cond_procedure_count_prob()
+  /*=========================================================================
+  | PROCEDURE ins_cond_procedure_count_prob
+  |
+  | Pr(Procedure Draw Count | Condition Concept, Interval Bucket,
+  |    procedure Concept Count Bucket, Condition Concept Count Bucket)
+  |
+  | This is the INTEGER of times to draw for a first occurrence procedure era for
+  | a condition era
+  |
+  | Analyze source CDM database and store results for:
+  |   INTEGER of procedure Occurrences from a condition to the next day with conditions
+  |   based on Condition Concept, the Bucketed Duration until the next day
+  |   with a Conditon Era, Person's Distinct procedure Count Bucket, and Person's
+  |   Distinct Condition Count Bucket
+  |
+  |==========================================================================
+  */
+  RETURNS VOID AS $$
+  DECLARE
+    num_rows INTEGER;
+    MESSAGE              text;
+  BEGIN
+    PERFORM insert_log('Starting Condition Interval Procedure Occurrences Count Probability Analysis',
+      'ins_cond_procedure_count_prob');
+
+    TRUNCATE TABLE osim_cond_procedure_count_prob;
+    --COMMIT;
+
+    -- Drop Indexes for Quicker Insertion
+    BEGIN
+      DROP INDEX osim_cond_procedure_count_prob_ix1;
+      DROP INDEX osim_cond_procedure_count_prob_ix2;
+    EXCEPTION
+      WHEN OTHERS THEN
+        PERFORM insert_log('Probability indexes are already removed',
+            'ins_cond_procedure_count_prob');
+    END;
+
+     --COMMIT;
+
+
+    INSERT /*+ append nologging */ INTO osim_cond_procedure_count_prob
+    (  condition_concept_id, interval_bucket, age_bucket, procedure_count_bucket,
+        condition_count_bucket, procedure_count, n, accumulated_probability )
+    WITH gaps AS
+     (SELECT
+       cond_gaps.person_id,
+       cond_gaps.age_bucket,
+       cond_gaps.cond_start_date,
+       cond_gaps.next_cond_start_date,
+       cond_gaps.procedure_concepts,
+       cond_gaps.condition_concepts,
+       cond_gaps.day_cond_count,
+       coalesce(COUNT(DISTINCT procedure.procedure_concept_id),0) AS procedure_count
+      FROM
+       (SELECT
+          cond_dates.person_id,
+          cond_dates.condition_era_start_date AS cond_start_date,
+          person.procedure_concepts,
+          person.condition_concepts,
+          osim__age_bucket(
+            person.age + (cond_dates.condition_era_start_date
+              - person.observation_period_start_date) / 365.25)
+                      AS age_bucket,
+          LEAD (cond_dates.condition_era_start_date,1,
+              person.observation_period_end_date)
+            OVER (PARTITION BY cond_dates.person_id
+                  ORDER BY cond_dates.condition_era_start_date)
+                    AS next_cond_start_date,
+          cond_dates.day_cond_count
+        FROM v_src_person_strata person
+        INNER JOIN
+         (SELECT
+            person_id,
+            condition_era_start_date,
+            COUNT(condition_concept_id) AS day_cond_count
+          FROM
+           (SELECT DISTINCT
+              cond.person_id,
+              cond.condition_concept_id,
+              cond.condition_era_start_date
+            FROM v_src_condition_era1 cond
+            UNION
+            SELECT
+              person_id,
+              -1 AS condition_concept_id,
+              observation_period_start_date AS condition_era_start_date
+            FROM v_src_person_strata) t1
+          GROUP BY person_id, condition_era_start_date) cond_dates
+          ON person.person_id = cond_dates.person_id
+        WHERE person.observation_period_end_date
+          >= cond_dates.condition_era_start_date) cond_gaps
+      LEFT JOIN v_src_first_procedures procedure ON cond_gaps.person_id = procedure.person_id
+          AND cond_gaps.cond_start_date <= procedure.procedure_date
+          AND cond_gaps.next_cond_start_date > procedure.procedure_date
+      GROUP BY cond_gaps.person_id, cond_gaps.age_bucket, cond_gaps.cond_start_date,
+        cond_gaps.next_cond_start_date, cond_gaps.procedure_concepts,
+        cond_gaps.condition_concepts,cond_gaps.day_cond_count)
+    SELECT
+      condition_concept_id,
+      interval_bucket,
+      age_bucket,
+      procedure_count_bucket,
+      condition_count_bucket,
+      gap_procedure_count,
+      n,
+      SUM(probability)
+        OVER
+         (PARTITION BY condition_concept_id, interval_bucket, age_bucket,
+                   procedure_count_bucket, condition_count_bucket
+          ORDER BY probability DESC
+            ROWS UNBOUNDED PRECEDING) accumulated_probability
+    FROM
+     (SELECT
+        condition_concept_id,
+        interval_bucket,
+        age_bucket,
+        procedure_count_bucket,
+        condition_count_bucket,
+        gap_procedure_count,
+        sum_prob AS n,
+        1.0 * sum_prob/ NULLIF(SUM(sum_prob)
+                                OVER(PARTITION BY condition_concept_id, interval_bucket, age_bucket,
+                   procedure_count_bucket, condition_count_bucket), 0) AS probability
+      FROM
+       (SELECT
+          condition_concept_id,
+          interval_bucket,
+          age_bucket,
+          procedure_count_bucket,
+          condition_count_bucket,
+          gap_procedure_count,
+          SUM(prob) AS sum_prob
+        FROM
+         (SELECT DISTINCT
+            gaps.person_id,
+            gaps.age_bucket,
+            cond.condition_concept_id,
+            gaps.cond_start_date,
+            gaps.next_cond_start_date,
+            osim__procedure_count_bucket(gaps.procedure_concepts) AS procedure_count_bucket,
+            osim__condition_count_bucket(gaps.condition_concepts)
+              AS condition_count_bucket,
+            osim__duration_days_bucket(gaps.next_cond_start_date
+                - gaps.cond_start_date) AS interval_bucket,
+            1 AS prob,
+            gaps.procedure_count as gap_procedure_count
+          FROM gaps
+          INNER JOIN v_src_condition_era1 cond
+            ON gaps.person_id = cond.person_id
+            AND gaps.cond_start_date = cond.condition_era_start_date
+          UNION
+          SELECT DISTINCT
+            person_id,
+            age_bucket,
+            -1 AS condition_concept_id,
+            FIRST_VALUE(cond_start_date)
+              OVER (PARTITION BY person_id ORDER BY cond_start_date)
+                AS cond_start_date,
+            FIRST_VALUE(next_cond_start_date)
+              OVER (PARTITION BY person_id ORDER BY cond_start_date)
+                AS next_cond_start_date,
+            osim__procedure_count_bucket(procedure_concepts)
+                AS procedure_count_bucket,
+            osim__condition_count_bucket(condition_concepts)
+                AS condition_count_bucket,
+            osim__duration_days_bucket(FIRST_VALUE(next_cond_start_date)
+              OVER (PARTITION BY person_id ORDER BY cond_start_date)
+            - FIRST_VALUE(cond_start_date)
+                OVER (PARTITION BY person_id ORDER BY cond_start_date))
+                  AS interval_bucket,
+            1 AS prob,
+            FIRST_VALUE(procedure_count)
+              OVER (PARTITION BY person_id ORDER BY cond_start_date)
+                AS gap_procedure_count
+          FROM gaps
+          ORDER BY 1,3,2) t1
+        GROUP BY condition_concept_id, interval_bucket, age_bucket, procedure_count_bucket,
+          condition_count_bucket, gap_procedure_count
+      ORDER BY 1,2,3,4,5,7 DESC) t2
+     ) t3
+    ORDER BY 1,2,3,4,5,8;
+
+    GET DIAGNOSTICS num_rows = ROW_COUNT;
+    MESSAGE := num_rows || ' rows inserted into osim_cond_procedure_count_prob.';
+    PERFORM insert_log(MESSAGE, 'ins_cond_procedure_count_prob');
+    raise debug 'Inserted ins_cond_procedure_count_prob, rows = %', num_rows;
+
+     --COMMIT;
+
+
+    CREATE INDEX osim_cond_procedure_count_prob_ix1 ON osim_cond_procedure_count_prob (
+      condition_concept_id, interval_bucket, age_bucket, procedure_count_bucket,
+      condition_count_bucket)
+    WITH (FILLFACTOR = 90);
+
+
+    CREATE INDEX osim_cond_procedure_count_prob_ix2
+      ON osim_cond_procedure_count_prob (accumulated_probability)
+    WITH (FILLFACTOR = 90);
+
+    --COMMIT;
+
+    -- a few of the last buckets may not quite add up to 1.0
+    UPDATE osim_cond_procedure_count_prob
+    SET accumulated_probability = 1.0
+    WHERE oid IN
+     (SELECT DISTINCT
+        FIRST_VALUE(oid)
+          OVER
+           (PARTITION BY condition_concept_id, interval_bucket, age_bucket,
+              procedure_count_bucket, condition_count_bucket
+            ORDER BY accumulated_probability DESC)
+      FROM osim_cond_procedure_count_prob);
+
+    --COMMIT;
+
+    PERFORM insert_log('Processing complete', 'ins_cond_procedure_count_prob');
+    raise debug 'Processing complete ins_cond_procedure_count_prob';
+    EXCEPTION
+    WHEN OTHERS THEN
+    PERFORM insert_log('Exception', 'ins_cond_procedure_count_prob');
   raise notice 'Processing complete ins_cond_count_probability, rows = %', num_rows;
 
   END;
@@ -1829,6 +2327,265 @@ CREATE OR REPLACE FUNCTION ins_cond_first_drug_prob()
   END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION ins_cond_first_procedure_prob()
+  /*=========================================================================
+  | PROCEDURE ins_cond_first_procedure_prob
+  |
+  | Pr(Procedure Concept, Days until | Condition Concept, Interval Bucket,
+  |    Procedure Concept Count Bucket, Condition Concept Count Bucket,
+  |    INTEGER of Conditons with the same Start Date, Gender)
+  |
+  | Analyze source CDM database and store results for:
+  |   Probability of Procedure Concept and Days until for every Condition Era
+  |     based on Conditon Concept, the Bucketed Duration until the next day
+  |     with a Conditon Era, Person's Distinct Procedure Count Bucket, and Person's
+  |     Distinct Condition Count Bucket, the INTEGER of Condition Eras the
+  |     the Person has with the Same Start Date, Person's Gender
+  |
+  |==========================================================================
+  */
+  RETURNS VOID AS $$
+  DECLARE
+    num_rows INTEGER;
+    MESSAGE              text;
+  BEGIN
+    PERFORM insert_log('Starting Condition Interval Procedure Era Analysis',
+      'ins_cond_first_procedure_prob');
+
+    TRUNCATE TABLE osim_cond_first_procedure_prob;
+
+    --COMMIT;
+    -- Drop Indexes for Quicker Insertion
+    BEGIN
+      DROP INDEX osim_cond_procedure_prob_ix1;
+      DROP INDEX osim_cond_procedure_prob_ix2;
+    EXCEPTION
+      WHEN OTHERS THEN
+        PERFORM insert_log('Probability indexes are already removed',
+            'ins_cond_first_procedure_prob');
+    END;
+
+    --COMMIT;
+
+    INSERT /*+ append nologging */ INTO osim_cond_first_procedure_prob
+    (  condition_concept_id, interval_bucket, gender_concept_id, age_bucket,
+        condition_count_bucket, procedure_count_bucket, day_cond_count, procedure_concept_id,
+        delta_days, n, accumulated_probability )
+    WITH gaps AS
+     (SELECT
+       cond_gaps.person_id,
+       cond_gaps.gender_concept_id,
+       cond_gaps.age_bucket,
+       cond_gaps.condition_count_bucket,
+       cond_gaps.procedure_count_bucket,
+       cond_gaps.cond_start_date,
+       cond_gaps.next_cond_start_date,
+       cond_gaps.day_cond_count,
+       coalesce(COUNT(DISTINCT procedure.procedure_concept_id),0) AS procedure_occurrence_count
+      FROM
+       (SELECT
+          cond_dates.person_id,
+          person.gender_concept_id,
+          osim__age_bucket(
+            person.age + (cond_dates.condition_era_start_date
+              - person.observation_period_start_date)
+              / 365.25) AS age_bucket,
+          osim__condition_count_bucket(person.condition_concepts)
+            AS condition_count_bucket,
+          osim__procedure_count_bucket(person.procedure_concepts) AS procedure_count_bucket,
+          cond_dates.condition_era_start_date AS cond_start_date,
+          LEAD (cond_dates.condition_era_start_date,1,person.observation_period_end_date)
+            OVER (PARTITION BY cond_dates.person_id
+                  ORDER BY cond_dates.condition_era_start_date)
+                    AS next_cond_start_date,
+          cond_dates.day_cond_count
+        FROM v_src_person_strata person
+        INNER JOIN
+         (SELECT
+            person_id,
+            condition_era_start_date,
+            COUNT(condition_concept_id) AS day_cond_count
+          FROM
+           (SELECT DISTINCT
+              cond.person_id,
+              cond.condition_concept_id,
+              cond.condition_era_start_date
+            FROM v_src_condition_era1 cond
+            UNION
+            SELECT
+              person_id,
+              -1 AS condition_concept_id,
+              observation_period_start_date AS condition_era_start_date
+            FROM v_src_person_strata) t1
+          GROUP BY person_id, condition_era_start_date) cond_dates
+          ON person.person_id = cond_dates.person_id
+        WHERE person.observation_period_end_date
+                >= cond_dates.condition_era_start_date) cond_gaps
+      LEFT JOIN v_src_first_procedures procedure ON cond_gaps.person_id = procedure.person_id
+          AND cond_gaps.cond_start_date <= procedure.procedure_occurrence_start_date
+          AND cond_gaps.next_cond_start_date > procedure.procedure_occurrence_start_date
+      GROUP BY cond_gaps.person_id, cond_gaps.gender_concept_id,
+       cond_gaps.age_bucket, cond_gaps.condition_count_bucket,
+       cond_gaps.procedure_count_bucket,cond_gaps.cond_start_date,
+        cond_gaps.next_cond_start_date, cond_gaps.day_cond_count),
+      cond_procedure AS
+       (SELECT DISTINCT
+          gaps.person_id,
+          gaps.gender_concept_id,
+          gaps.age_bucket,
+          gaps.condition_count_bucket,
+          gaps.procedure_count_bucket,
+          gaps.cond_start_date,
+          gaps.next_cond_start_date,
+          gaps.day_cond_count,
+          coalesce(cond.condition_concept_id,-1) AS condition_concept_id,
+          coalesce(procedure.procedure_occurrence_date,gaps.cond_start_date) AS procedure_occurrence_date,
+          coalesce(procedure.procedure_concept_id,-1) AS procedure_concept_id
+        FROM gaps
+        LEFT JOIN v_src_condition_era1 cond
+          ON gaps.person_id = cond.person_id
+          AND gaps.cond_start_date = cond.condition_era_start_date
+        LEFT JOIN v_src_first_procedures procedure
+          ON gaps.person_id = procedure.person_id
+            AND gaps.cond_start_date <= procedure.procedure_occurrence_start_date
+            AND gaps.next_cond_start_date > procedure.procedure_occurrence_start_date)
+    SELECT
+      condition_concept_id,
+      interval_bucket,
+      gender_concept_id,
+      age_bucket,
+      condition_count_bucket,
+      procedure_count_bucket,
+      2 as day_cond_count,
+      procedure_concept_id,
+      delta_days,
+      n,
+      SUM(probability)
+        OVER
+         (PARTITION BY condition_concept_id, interval_bucket, gender_concept_id,
+            age_bucket, condition_count_bucket, procedure_count_bucket
+          ORDER BY probability DESC
+            ROWS UNBOUNDED PRECEDING) accumulated_probability
+    FROM
+     (SELECT
+        condition_concept_id,
+        interval_bucket,
+        gender_concept_id,
+        age_bucket,
+        condition_count_bucket,
+        procedure_count_bucket,
+        procedure_concept_id,
+        delta_days,
+        sum_prob AS n,
+        1.0 * sum_prob/ NULLIF(SUM(sum_prob)
+                                OVER(PARTITION BY condition_concept_id, interval_bucket,
+                    gender_concept_id, age_bucket, condition_count_bucket,
+                    procedure_count_bucket), 0) AS probability
+      FROM
+       (SELECT
+          condition_concept_id,
+          interval_bucket,
+          gender_concept_id,
+          age_bucket,
+          condition_count_bucket,
+          procedure_count_bucket,
+          delta_days,
+          procedure_concept_id,
+          SUM(prob) AS sum_prob
+        FROM
+         (SELECT
+            condition_concept_id,
+            osim__duration_days_bucket(next_cond_start_date - cond_start_date)
+              AS interval_bucket,
+            gender_concept_id,
+            age_bucket,
+            condition_count_bucket,
+            procedure_count_bucket,
+            osim__round_days(delta_days) AS delta_days,
+            procedure_concept_id,
+            1.0 / (day_cond_count) AS prob
+          FROM
+           (SELECT DISTINCT
+              person_id,
+              gender_concept_id,
+              age_bucket,
+              condition_count_bucket,
+              procedure_count_bucket,
+              cond_start_date,
+              next_cond_start_date,
+              day_cond_count,
+              condition_concept_id,
+              procedure_occurrence_date - cond_start_date AS delta_days,
+              procedure_concept_id
+            FROM cond_procedure
+            UNION
+            SELECT DISTINCT
+              gaps.person_id,
+              gaps.gender_concept_id,
+              gaps.age_bucket,
+              gaps.condition_count_bucket,
+              gaps.procedure_count_bucket,
+              gaps.cond_start_date,
+              gaps.next_cond_start_date,
+              gaps.day_cond_count,
+              cond.condition_concept_id,
+              0 AS delta_days,
+              -1 AS procedure_concept_id
+            FROM gaps
+            INNER JOIN v_src_condition_era1 cond
+              ON gaps.person_id = cond.person_id
+                AND gaps.cond_start_date = cond.condition_era_start_date
+            WHERE gaps.day_cond_count > 1) t1
+          ORDER BY 1,2) t2
+        GROUP BY condition_concept_id, interval_bucket, gender_concept_id,
+              age_bucket, condition_count_bucket, procedure_count_bucket,
+              delta_days, procedure_concept_id
+        ORDER BY 1,2,5 DESC) t3
+     ) t4
+    ORDER BY 1,2,6;
+
+    GET DIAGNOSTICS num_rows = ROW_COUNT;
+    MESSAGE := num_rows || ' rows inserted into osim_cond_procedure_prob for '
+        || 'co-occurent condtion transitions.';
+    PERFORM insert_log(MESSAGE, 'ins_cond_procedure_prob');
+  raise debug 'Inserted ins_cond_procedure_prob, rows = %', num_rows;
+
+    --COMMIT;
+
+
+    CREATE INDEX osim_cond_procedure_prob_ix1 ON osim_cond_first_procedure_prob (
+      condition_concept_id, interval_bucket, age_bucket, condition_count_bucket,
+      procedure_count_bucket, day_cond_count, gender_concept_id)
+      WITH (FILLFACTOR = 90);
+
+
+    CREATE INDEX osim_cond_procedure_prob_ix2
+      ON osim_cond_first_procedure_prob (accumulated_probability)
+      WITH (FILLFACTOR = 90);
+
+    --COMMIT;
+
+    -- a few of the last buckets may not quite add up to 1.0
+    UPDATE osim_cond_first_procedure_prob
+    SET accumulated_probability = 1.0
+    WHERE oid IN
+     (SELECT DISTINCT
+        FIRST_VALUE(oid)
+          OVER
+           (PARTITION BY condition_concept_id, interval_bucket, day_cond_count
+            ORDER BY accumulated_probability DESC)
+      FROM osim_cond_first_procedure_prob);
+
+    --COMMIT;
+
+    PERFORM insert_log('Processing complete', 'ins_cond_first_procedure_prob');
+    raise debug 'Processing complete ins_cond_procedure_prob';
+    EXCEPTION
+      WHEN OTHERS THEN
+      PERFORM insert_log('Exception', 'ins_cond_first_procedure_prob');
+  END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION ins_drug_era_count_prob()
   /*=========================================================================
   | PROCEDURE ins_drug_era_count_prob
@@ -1968,12 +2725,146 @@ CREATE OR REPLACE FUNCTION ins_drug_era_count_prob()
   END;
   $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION ins_procedure_occurrence_count_prob()
+  /*=========================================================================
+  | PROCEDURE ins_procedure_occurrence_count_prob
+  |
+  | Pr(procedure_occurrence Count, Total Exposure | procedure Concept,
+  |     Distinct procedure Count Bucket, Distinct Conditon count bucket,
+  |     Age Bucket, Time Remaining)
+  |
+  | Analyze source CDM database and store results for:
+  |   INTEGER of procedure Occurrences per Person for a given procedure Concept
+  |   based on procedure Concept, Person's Distinct procedure Count Bucket,
+  |   Person's Distinct Condition Count Bucket, Person's Age
+  |   Bucket (at time of first procedure occurrence), and Full Semi-years Remaining
+  |   in Person's Observation Period
+  |
+  |==========================================================================
+  */
+  RETURNS VOID AS $$
+  DECLARE
+    num_rows  INTEGER;
+    MESSAGE              text;
+  BEGIN
+    PERFORM insert_log('Starting procedure Ocurrence Count Analysis', 'ins_procedure_occurrence_count_prob');
+    TRUNCATE TABLE osim_procedure_occurrence_count_prob;
+
+    --COMMIT;
+    -- Drop Indexes for Quicker Insertion
+    BEGIN
+      DROP INDEX osim_procedure_occurrence_count_ix1;
+      DROP INDEX osim_procedure_occurrence_count_ix2;
+    EXCEPTION
+      WHEN OTHERS THEN
+        PERFORM insert_log('Probability indexes are already removed',
+            'ins_procedure_occurrence_count_prob');
+    END;
+
+    --COMMIT;
+
+    INSERT /*+ append nologging */ INTO osim_procedure_occurrence_count_prob
+     (procedure_concept_id, procedure_count_bucket, condition_count_bucket, age_range,
+        time_remaining, procedure_occurrence_count, n, accumulated_probability)
+    SELECT
+      procedure_concept_id,
+      procedures_bucket,
+      conds_bucket,
+      age_range,
+      time_remaining,
+      eras,
+      n,
+      SUM(probability) OVER
+       (PARTITION BY procedure_concept_id, procedures_bucket, conds_bucket,
+        age_range, time_remaining
+        ORDER BY probability DESC ROWS UNBOUNDED PRECEDING) accumulated_probability
+    FROM
+     (SELECT
+        procedure_concept_id,
+        procedures_bucket,
+        conds_bucket,
+		    age_range,
+        time_remaining,
+        COUNT(person_id) as persons,
+        eras,
+        COUNT(person_id) AS n,
+        1.0 * COUNT(person_id)/ NULLIF(SUM(COUNT(person_id)) OVER(PARTITION BY procedure_concept_id, procedures_bucket, conds_bucket,
+          age_range, time_remaining), 0) AS probability
+      FROM
+       (SELECT
+          procedure.procedure_concept_id,
+          osim__procedure_count_bucket(person.procedure_concepts) AS procedures_bucket,
+          osim__condition_count_bucket(person.condition_concepts) AS conds_bucket,
+		      osim__age_bucket(person.age) AS age_range,
+          osim__time_observed_bucket(person.observation_period_end_date
+            - MIN(procedure.procedure_date)) AS time_remaining,
+          COUNT(DISTINCT procedure.procedure_occurrence_id) AS eras,
+          person.person_id
+        FROM v_src_person_strata person
+        INNER JOIN v_src_procedure_occurrence1 procedure ON person.person_id = procedure.person_id
+        GROUP BY
+          procedure.procedure_concept_id,
+          person.procedure_concepts,
+          person.condition_concepts,
+          person.age,
+          person.observation_period_end_date,
+          person.person_id) t1
+      GROUP BY procedure_concept_id, eras, procedures_bucket,
+        conds_bucket, age_range, time_remaining) t2
+    ORDER BY 1,2,3,4,5,8;
+
+    GET DIAGNOSTICS num_rows = ROW_COUNT;
+    MESSAGE := num_rows || ' rows inserted into osim_procedure_occurrence_count_prob.';
+    PERFORM insert_log(MESSAGE, 'ins_procedure_occurrence_count_prob');
+    raise debug 'Inserted ins_procedure_occurrence_count_prob, rows = %', num_rows;
+
+    --COMMIT;
+
+
+      CREATE INDEX osim_procedure_occurrence_count_ix1 ON osim_procedure_occurrence_count_prob (
+        procedure_concept_id,
+        procedure_count_bucket,
+        condition_count_bucket,
+		    age_range,
+        time_remaining)
+      WITH (FILLFACTOR = 90);
+
+
+      CREATE INDEX osim_procedure_occurrence_count_ix2 ON osim_procedure_occurrence_count_prob (
+        accumulated_probability)
+      WITH (FILLFACTOR = 90);
+
+    --COMMIT;
+
+    UPDATE osim_procedure_occurrence_count_prob
+    SET accumulated_probability = 1.0
+    WHERE oid IN
+     (SELECT DISTINCT
+        FIRST_VALUE(oid)
+          OVER
+           (PARTITION BY procedure_concept_id, procedure_count_bucket, condition_count_bucket,
+              age_range, time_remaining
+            ORDER BY accumulated_probability DESC)
+      FROM osim_procedure_occurrence_count_prob);
+
+     --COMMIT;
+
+    PERFORM insert_log('Processing complete', 'ins_procedure_occurrence_count_prob');
+    raise debug 'Processing complete ins_procedure_occurrence_count_prob';
+    EXCEPTION
+      WHEN OTHERS THEN
+      PERFORM insert_log('Exception', 'ins_procedure_occurrence_count_prob');
+    GET STACKED DIAGNOSTICS MESSAGE = PG_EXCEPTION_CONTEXT;
+    RAISE NOTICE 'context: >>%<<', MESSAGE;
+    raise notice '% %', SQLERRM, SQLSTATE;
+  END;
+  $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION ins_drug_duration_probability()
   /*=========================================================================
-  | PROCEDURE ins_drug_duration_probability
+  | PROCEDURE ins_procedure_duration_probability
   |
-  | Pr(Drug Duration | Drug Concept, Drug Era Count, Time Remaining)
+  | Pr(procedure Duration | Drug Concept, Drug Era Count, Time Remaining)
   |
   | Analyze source CDM database and store results for:
   |   INTEGER of days from observation start of first Drug Era to the
@@ -3429,6 +4320,7 @@ $$ LANGUAGE plpgsql;
     max_person_id                 INTEGER;
     max_condition_era_id          INTEGER;
     max_drug_era_id               INTEGER;
+    max_procedure_occurrence_id   INTEGER;
 
     person_index                  INTEGER;
     this_gender                   INTEGER;
@@ -3487,6 +4379,12 @@ $$ LANGUAGE plpgsql;
     ) ON COMMIT DELETE ROWS;
     CREATE INDEX condition_id_index ON this_person_conditions_table (condition_concept_id);
 
+    DROP TABLE IF EXISTS this_person_procedures_table;
+    CREATE TEMPORARY TABLE this_person_procedures_table (
+      procedure_concept_id INTEGER NOT NULL
+    ) ON COMMIT DELETE ROWS;
+    CREATE INDEX procedure_id_index ON this_person_procedures_table (procedure_concept_id);
+
     DROP TABLE IF EXISTS osim_tmp_outcome;
     CREATE TEMPORARY TABLE osim_tmp_outcome (
           person_id NUMERIC(12, 0) NOT NULL,
@@ -3512,6 +4410,14 @@ $$ LANGUAGE plpgsql;
           person_id NUMERIC(12, 0) NOT NULL,
           drug_concept_id NUMERIC(15, 0),
           drug_exposure_count NUMERIC(5, 0)
+        ) ON COMMIT DELETE ROWS;
+
+    DROP TABLE IF EXISTS osim_tmp_procedure_occurrence;
+    CREATE TEMPORARY TABLE osim_tmp_procedure_occurrence (
+          procedure_date DATE,
+          person_id NUMERIC(12, 0) NOT NULL,
+          procedure_concept_id NUMERIC(15, 0),
+          quantity NUMERIC(5, 0)
         ) ON COMMIT DELETE ROWS;
 
     -- Start the simulation
@@ -3583,6 +4489,20 @@ $$ LANGUAGE plpgsql;
 
       GET DIAGNOSTICS num_rows = ROW_COUNT;
       max_drug_era_id := max_drug_era_id + num_rows;
+
+      -- insert procedures
+      INSERT INTO osim_procedure_occurrence
+       (procedure_occurrence_id, procedure_date, person_id,
+       procedure_concept_id, quantity)
+      SELECT
+        max_procedure_occurrence_id + coalesce(row_number() OVER (ORDER BY person_id), 0) AS procedure_occurrence_id,
+        procedure_date, person_id,
+        procedure_concept_id, quantity
+      FROM osim_tmp_procedure_occurrence
+      WHERE person_id = max_person_id;
+
+      GET DIAGNOSTICS num_rows = ROW_COUNT;
+      max_procedure_occurrence_id := max_procedure_occurrence_id + num_rows;
 
       --COMMIT;
       --Report progress every 1%
@@ -4056,9 +4976,6 @@ CREATE OR REPLACE FUNCTION ins_outcomes()
   END; 
 $$ LANGUAGE plpgsql;
 
--- ============================
--- Procedure Occurence
--- ============================
 
 CREATE OR REPLACE FUNCTION ins_sim_procedures (
   /*=========================================================================
@@ -4074,13 +4991,29 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
     this_cond_count_bucket        INTEGER,
     this_age                      INTEGER,
     this_age_bucket               INTEGER
-    --drug_persistence              INTEGER
-
   )
   RETURNS VOID AS $$
   DECLARE
 
     tmp_rand                      FLOAT;
+
+    tmp_procedure_concept_id       INTEGER;
+    tmp_procedure_date   DATE;
+
+    tmp_days_remaining        INTEGER;
+    tmp_days_remaining_bucket INTEGER;
+    tmp_procedure_occurrences_max         INTEGER;
+    tmp_procedure_occurrences_for_procedure    INTEGER;
+    tmp_age                   INTEGER;
+    tmp_age_bucket            INTEGER;
+    this_occurrence_delta_days  INTEGER;
+    tmp_duration_start        DATE;
+    tmp_delta_days    INTEGER;
+
+    this_person_procedure_count        INTEGER;
+    this_procedure_concept             INTEGER;
+    this_cond_procedure_count_max      INTEGER;
+    this_procedure_delta_days          INTEGER;
     this_target_procedure_count        INTEGER;
     this_target_procedure_bucket       INTEGER;
     this_person_procedure_count        INTEGER;
@@ -4094,11 +5027,7 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
     --   procedures are simulated from the person's Conditons
 
     -- Clear existing condition and procedure concepts for new person
-    DROP TABLE IF EXISTS this_person_procedures_table;
-    CREATE TEMPORARY TABLE this_person_procedures_table (
-      procedure_concept_id INTEGER NOT NULL
-    ) ON COMMIT DELETE ROWS;
-
+    TRUNCATE TABLE this_person_procedures_table;
 
     -- Draw for person's Distinct procedure Concept count
     BEGIN
@@ -4116,6 +5045,8 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
         THEN
           this_target_procedure_count := 0;
     END;
+
+
     this_target_procedure_bucket := osim__procedure_count_bucket(this_target_procedure_count);
 
     this_person_procedure_count := 0;
@@ -4128,7 +5059,7 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
       DECLARE
         tmp_age                   INTEGER;
         tmp_age_bucket            INTEGER;
-        -- Cursor of all condition eras and starta needed for transitions
+        -- Cursor of all condition eras and start needed for transitions
         cond_era_cur CURSOR FOR
           SELECT
             person_id,
@@ -4186,8 +5117,8 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
 
             SELECT DISTINCT
               FIRST_VALUE(procedure_count)
-                OVER (ORDER BY count_prob.accumulated_probability) AS procedure_era_count
-            INTO STRICT this_cond_procedure_count
+                OVER (ORDER BY count_prob.accumulated_probability) AS procedure_occurrence_count
+            INTO STRICT this_cond_procedure_count_max
             FROM osim_cond_procedure_count_prob count_prob
             WHERE count_prob.condition_concept_id = cond_era.condition_concept_id
               AND count_prob.procedure_count_bucket = this_target_procedure_bucket
@@ -4201,14 +5132,15 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
                 this_cond_procedure_count := 0;
           END;
 
-          -- Force the last few procedures, if necessary
-          IF this_target_procedure_count - this_person_procedure_count < 10
-             AND this_cond_procedure_count = 0 THEN
-            this_cond_procedure_count := 1;
-          END IF;
+--           -- Force the last few procedures, if necessary
+--           IF this_target_procedure_count - this_person_procedure_count < 10
+--              AND this_cond_procedure_count_max = 0 THEN
+--             this_cond_procedure_count_max := 1;
+--           END IF;
 
+          this_cond_procedure_count = 1;
 
-          FOR i IN 1..this_cond_procedure_count
+          WHILE this_cond_procedure_count < this_cond_procedure_count_max
           LOOP
           -- Draw for procedure Concept
             BEGIN
@@ -4241,11 +5173,10 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
 
               IF cond_era.condition_era_start_date + this_procedure_delta_days
                 <= this_person_end_date THEN
-                INSERT INTO osim_tmp_procedure_era
-                 (procedure_era_start_date, procedure_era_end_date, person_id,
-                  procedure_concept_id, procedure_exposure_count)
+                INSERT INTO osim_tmp_procedure_occurrence
+                 (procedure_date, person_id,
+                  procedure_concept_id, quantity)
                 VALUES(
-                  cond_era.condition_era_start_date + this_procedure_delta_days,
                   cond_era.condition_era_start_date + this_procedure_delta_days,
                   cond_era.person_id,
                   this_procedure_concept,
@@ -4253,6 +5184,108 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
 
                 this_person_procedure_count := this_person_procedure_count + 1;
                 INSERT INTO this_person_procedures_table VALUES (this_procedure_concept);
+
+                -- Insert procedure reoccurrences
+
+                -- initialization
+
+                tmp_procedure_concept_id := this_procedure_concept;
+                tmp_procedure_date := cond_era.condition_era_start_date + this_procedure_delta_days;
+
+                tmp_days_remaining := this_person_end_date - tmp_procedure_date;
+                tmp_days_remaining_bucket :=
+                    osim__time_observed_bucket(tmp_days_remaining);
+
+                tmp_age := this_age + (tmp_procedure_date - this_person_begin_date) / 365.25;
+                tmp_age_bucket := osim__age_bucket(tmp_age);
+
+                BEGIN
+                    tmp_rand := random();
+                    SELECT DISTINCT
+                      FIRST_VALUE(procedure_occurrence_count)
+                        OVER (ORDER BY accumulated_probability)
+                    INTO STRICT tmp_procedure_occurrences_max
+                    FROM osim_procedure_occurrence_count_prob
+                    WHERE procedure_concept_id = tmp_procedure_concept_id
+                      AND procedure_count_bucket = this_target_procedure_bucket
+                      AND condition_count_bucket = this_cond_count_bucket
+                      AND age_range = tmp_age_bucket
+                      AND time_remaining = tmp_days_remaining_bucket
+                      AND tmp_rand <= accumulated_probability;
+                  EXCEPTION
+                    WHEN NO_DATA_FOUND THEN
+                      tmp_procedure_occurrences_max := 1;
+
+                END;
+
+                tmp_procedure_occurrences_for_procedure := 1;
+                tmp_duration_start := tmp_procedure_date;
+
+                WHILE tmp_procedure_occurrences_for_procedure < tmp_procedure_occurrences_max
+                  LOOP
+                    tmp_rand := random();
+
+                   -- Draw for days until the subsequent Procedure Occurrence
+                    BEGIN
+                      SELECT DISTINCT
+                        FIRST_VALUE(delta_days)
+                          OVER (ORDER BY accumulated_probability) as delta_days
+                      INTO STRICT this_occurrence_delta_days
+                      FROM osim_procedure_reoccur_probability prob
+                        WHERE procedure_concept_id = tmp_procedure_concept_id
+                        AND age_range = tmp_age_bucket
+                        AND time_remaining = tmp_days_remaining
+                        AND tmp_rand <= accumulated_probability;
+                    EXCEPTION
+                      WHEN NO_DATA_FOUND
+                        THEN
+                          -- Reset to first occurrence
+                          tmp_age_bucket := 0;
+                          tmp_procedure_date := cond_era.condition_era_start_date + this_procedure_delta_days;
+                          tmp_age := this_age + (tmp_procedure_date - this_person_begin_date) / 365.25;
+                          tmp_days_remaining_bucket := tmp_days_remaining_bucket - this_occurrence_delta_days;
+                          tmp_procedure_occurrences_max := tmp_procedure_occurrences_max - 1;
+                    END;
+
+                  IF tmp_age_bucket > 0 THEN
+
+                      --
+                      -- Write Procedure Occurrence
+                      --
+
+                      -- Randomize from returned days bucket
+                      tmp_delta_days := (osim__randomize_days(this_occurrence_delta_days));
+
+                      tmp_duration_start := tmp_duration_start + tmp_delta_days;
+
+                      tmp_age := tmp_age + tmp_delta_days / 365.25;
+
+                      tmp_days_remaining_bucket := tmp_days_remaining_bucket - tmp_delta_days;
+
+
+                     INSERT INTO osim_tmp_procedure_era
+                       (procedure_date, person_id,
+                            procedure_concept_id, quantity)
+                        SELECT
+                          tmp_duration_start,
+                          max_person_id,
+                          tmp_procedure_concept_id,
+                          1
+                        ;
+
+                      tmp_procedure_occurrences_for_procedure := tmp_procedure_occurrences_for_procedure + 1;
+                      this_cond_procedure_count := this_cond_procedure_count + 1;
+
+                    END IF;
+
+                    IF this_era_time_remaining < 0 THEN
+                      this_era_date := this_cond_date;
+                      this_era_age := this_cond_age;
+                      this_era_time_remaining := this_cond_time_remaining;
+                      this_cond_era_count_limit := this_cond_era_count_limit - 1;
+                    END IF;
+
+                  END LOOP;
 
                 IF this_person_procedure_count >= this_target_procedure_count THEN
                   --IF normal_rand(1, 0, 1) <= 0.8 THEN
@@ -4276,180 +5309,6 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
 
     END LOOP;
 
-    DECLARE
-      procedure_eras_cur CURSOR FOR
-        SELECT procedure.procedure_concept_id, procedure.procedure_era_start_date
-        FROM osim_tmp_procedure_era procedure
-        WHERE person_id = max_person_id
-        FOR UPDATE NOWAIT; -- OF procedure_era_end_date NOWAIT;
-      tmp_procedure_concept_id       INTEGER;
-      tmp_procedure_era_start_date   DATE;
-      tmp_procedure_era_end_date     DATE;
-      tmp_era_duration          INTEGER;
-      tmp_days_remaining        INTEGER;
-      tmp_days_remaining_bucket INTEGER;
-      tmp_procedure_eras_max         INTEGER;
-      tmp_procedure_eras_for_procedure    INTEGER;
-      tmp_age                   INTEGER;
-      tmp_age_bucket            INTEGER;
-      tmp_total_exposure        INTEGER;
-      tmp_procedure_duration         INTEGER;
-      tmp_gap_duration          INTEGER;
-      tmp_gaps                  INTEGER;
-      tmp_gap                   INTEGER;
-      tmp_duration_start        DATE;
-      tmp_duration_end          DATE;
-    BEGIN
-
-      FOR procedure_eras IN procedure_eras_cur LOOP
-
-        tmp_procedure_concept_id := procedure_eras.procedure_concept_id;
-        tmp_procedure_era_start_date := procedure_eras.procedure_era_start_date;
-        tmp_procedure_era_end_date := tmp_procedure_era_start_date;
-
-        tmp_days_remaining := this_person_end_date - tmp_procedure_era_start_date;
-        tmp_days_remaining_bucket :=
-          osim__time_observed_bucket(tmp_days_remaining);
-
-        tmp_age := this_age + (tmp_procedure_era_start_date
-          - this_person_begin_date) / 365.25;
-        tmp_age_bucket := osim__age_bucket(tmp_age);
-
-        BEGIN
-          tmp_rand := random();
-          SELECT DISTINCT
-            FIRST_VALUE(procedure_era_count)
-              OVER (ORDER BY accumulated_probability),
-            FIRST_VALUE(total_exposure)
-              OVER (ORDER BY accumulated_probability)
-          INTO STRICT tmp_procedure_eras_max, tmp_total_exposure
-          FROM osim_procedure_era_count_prob
-          WHERE procedure_concept_id = tmp_procedure_concept_id
-            AND procedure_count_bucket = this_target_procedure_bucket
-            AND condition_count_bucket = this_cond_count_bucket
-            AND age_range = tmp_age_bucket
-            AND time_remaining = tmp_days_remaining_bucket
-            AND tmp_rand <= accumulated_probability;
-        EXCEPTION
-          WHEN NO_DATA_FOUND THEN
-            tmp_procedure_eras_max := 1;
-            tmp_total_exposure := 0;
-        END;
-
-        IF tmp_procedure_eras_max = 1 THEN
-          tmp_procedure_duration := tmp_total_exposure;
-        ELSE
-          BEGIN
-            tmp_rand := random();
-            SELECT DISTINCT
-              FIRST_VALUE(total_duration)
-                OVER (ORDER BY accumulated_probability)
-            INTO STRICT tmp_procedure_duration
-            FROM osim_procedure_duration_probability
-            WHERE procedure_concept_id = tmp_procedure_concept_id
-              AND time_remaining = tmp_days_remaining_bucket
-              AND procedure_era_count = tmp_procedure_eras_max
-              AND total_exposure = tmp_total_exposure
-              AND tmp_rand <= accumulated_probability;
-          EXCEPTION
-            WHEN NO_DATA_FOUND THEN
-              tmp_procedure_duration := ((procedure_persistence + 1) * (tmp_procedure_eras_max - 1)) + tmp_total_exposure;
-              tmp_procedure_duration := tmp_procedure_duration
-                + random() * ((this_person_end_date - tmp_procedure_era_start_date) - tmp_procedure_duration);
-          END;
-        END IF;
-
-        tmp_total_exposure := osim__randomize_days(tmp_total_exposure);
-        tmp_procedure_duration := osim__randomize_days(tmp_procedure_duration);
-        tmp_procedure_eras_for_procedure := 1;
-
-        tmp_duration_start := tmp_procedure_era_start_date;
-        tmp_duration_end := tmp_duration_start + tmp_procedure_duration;
-
-        IF tmp_total_exposure > tmp_procedure_duration - ((procedure_persistence + 1) * (tmp_procedure_eras_max - 1)) THEN
-          tmp_total_exposure := tmp_procedure_duration - ((procedure_persistence + 1) * (tmp_procedure_eras_max - 1));
-        END IF;
-
-        WHILE tmp_procedure_eras_for_procedure <= tmp_procedure_eras_max
-        LOOP
-
-          tmp_gap_duration := tmp_procedure_duration - tmp_total_exposure;
-          tmp_gaps := tmp_procedure_eras_max - tmp_procedure_eras_for_procedure;
-          IF tmp_gaps = 0 THEN
-            tmp_era_duration := tmp_total_exposure;
-          ELSE
-            tmp_era_duration :=
-              ROUND(normal_rand(1, 0, 1) * (tmp_total_exposure / (tmp_gaps + 1))
-                + (tmp_total_exposure / (tmp_gaps + 1)));
-            IF tmp_era_duration < 0 THEN
-              tmp_era_duration := 0;
-            END IF;
-            IF tmp_era_duration > tmp_total_exposure THEN
-              tmp_era_duration := tmp_total_exposure;
-            END IF;
-
-            tmp_gap := tmp_gap_duration - ( (procedure_persistence + 1) * tmp_gaps);
-            tmp_gap :=
-              ROUND(normal_rand(1, 0, 1) * (tmp_gap / tmp_gaps)
-                + (tmp_gap / tmp_gaps));
-
-            tmp_gap := tmp_gap + (procedure_persistence + 1);
-
-            IF tmp_gap > tmp_gap_duration - ( (procedure_persistence + 1) * (tmp_gaps-1)) THEN
-              tmp_gap := tmp_gap_duration - ( (procedure_persistence + 1) * (tmp_gaps-1));
-            END IF;
-
-            IF tmp_gap < (procedure_persistence + 1) THEN
-              tmp_gap := (procedure_persistence + 1);
-            END IF;
-
-          END IF;
-
-          IF tmp_procedure_eras_for_procedure = 1 THEN
-            -- Update already existing first era
-            tmp_procedure_era_end_date := tmp_procedure_era_start_date + tmp_era_duration;
-
-            UPDATE osim_tmp_procedure_era
-            SET procedure_era_end_date = tmp_procedure_era_end_date
-            WHERE CURRENT OF procedure_eras_cur;
-
-            tmp_duration_start := tmp_procedure_era_end_date + tmp_gap;
-          ELSE
-            IF MOD(tmp_procedure_eras_for_procedure,2) = 0 THEN
-              -- insert at the beginning of the duration
-              tmp_procedure_era_start_date := tmp_duration_start;
-              tmp_procedure_era_end_date := tmp_duration_start + tmp_era_duration;
-              tmp_duration_start := tmp_procedure_era_end_date + tmp_gap;
-            ELSE
-              -- insert at the end of the duration
-              tmp_procedure_era_end_date := tmp_duration_end;
-              tmp_procedure_era_start_date := tmp_procedure_era_end_date - tmp_era_duration;
-              tmp_duration_end := tmp_procedure_era_start_date - tmp_gap;
-            END IF;
-            --insert procedure era
-            IF tmp_procedure_era_start_date <= this_person_end_date THEN
-              IF tmp_procedure_era_end_date > this_person_end_date THEN
-                tmp_procedure_era_end_date := this_person_end_date;
-              END IF;
-              INSERT INTO osim_tmp_procedure_era
-                (procedure_era_start_date, procedure_era_end_date, person_id,
-                 procedure_concept_id, procedure_exposure_count)
-              VALUES( tmp_procedure_era_start_date, tmp_procedure_era_end_date,
-                      max_person_id,
---                       db_procedure_era_type_code,
-                      tmp_procedure_concept_id, 1);
-            END IF;
-          END IF;
-
-          tmp_procedure_duration := tmp_duration_end - tmp_duration_start;
-          tmp_total_exposure  := tmp_total_exposure - tmp_era_duration;
-          tmp_procedure_eras_for_procedure := tmp_procedure_eras_for_procedure + 1;
-
-        END LOOP;
-
-      END LOOP;
-
-    END;
     PERFORM insert_log('Simulated procedure',
         'ins_sim_procedure');
 

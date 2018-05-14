@@ -60,15 +60,15 @@
 
 --================================================================================
 -- Step 1. Adjust search path to destination schema as necessary
-SET search_path TO synthetic_data_generation_test, public;
+SET search_path TO synthetic_data_generation, public;
 
 --================================================================================
 -- Set 2. Edit views/schema to point to source tables
-CREATE OR REPLACE VIEW s_person as select * from mimic_v5.person;
-CREATE OR REPLACE VIEW s_condition_era as select * from mimic_v5.condition_era;
-CREATE OR REPLACE VIEW s_observation_period as select * from mimic_v5.observation_period;
-CREATE OR REPLACE VIEW s_drug_era as select * from mimic_v5.drug_era;
-CREATE OR REPLACE VIEW s_procedure_occurrence as select * from mimic_v5.procedure_occurrence;
+CREATE OR REPLACE VIEW s_person as select * from omop.person;
+CREATE OR REPLACE VIEW s_condition_era as select * from omop.condition_era;
+CREATE OR REPLACE VIEW s_observation_period as select * from omop.observation_period;
+CREATE OR REPLACE VIEW s_drug_era as select * from omop.drug_era;
+CREATE OR REPLACE VIEW s_procedure_occurrence as select * from omop.procedure_occurrence;
 --================================================================================
 -- VIEW v_src_person
 --================================================================================
@@ -295,7 +295,7 @@ GROUP BY procedure.person_id, procedure_date, procedure_concept_id;
 --================================================================================
 -- VIEW v_src_procedure_occurrence1_ids
 --================================================================================
-CREATE OR REPLACE VIEW v_procedure_occurrence1_ids
+CREATE OR REPLACE VIEW v_src_procedure_occurrence1_ids
  (procedure_occurrence_id, quantity) AS
 SELECT /*+ NO_PARALLEL(cond) */ DISTINCT
   procedure_occurrence_id, procedure.quantity

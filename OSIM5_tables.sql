@@ -63,7 +63,7 @@
 --================================================================================
 -- TABLE osim_condition_era
 --================================================================================
-SET search_path TO synthetic_data_generation_test, public;
+SET search_path TO synthetic_data_generation, public;
 
 DROP TABLE IF EXISTS osim_condition_era;
 CREATE UNLOGGED TABLE osim_condition_era (

@@ -83,7 +83,7 @@
 --================================================================================
 
 
-SET SEARCH_PATH TO synthetic_data_generation_test, public;
+SET SEARCH_PATH TO synthetic_data_generation, public;
 CREATE EXTENSION tablefunc; -- for norm_random function
 
 DROP TYPE IF EXISTS COND_TRANSITION CASCADE;
@@ -631,7 +631,7 @@ RETURNS VOID AS $$
     PERFORM insert_log(MESSAGE, 'ins_src_db_attributes');
     --PERFORM pg_background_launch('SELECT insert_log(''Processing complete'', ''ins_src_db_attributes'');');
     PERFORM insert_log('Processing complete', 'ins_src_db_attributes');
-    raise debug 'Processing complete ins_src_db_attributes, rows = %', num_rows;
+    raise notice 'Processing complete ins_src_db_attributes, rows = %', num_rows;
 
   EXCEPTION
     WHEN OTHERS THEN
@@ -691,7 +691,7 @@ CREATE OR REPLACE FUNCTION ins_gender_probability()
       FROM osim_gender_probability);
     --COMMIT;
     PERFORM insert_log('Processing complete', 'ins_gender_probability');
-    raise debug 'Processing complete ins_gender_probability, rows = %', num_rows;
+    raise notice 'Processing complete ins_gender_probability, rows = %', num_rows;
 
   EXCEPTION
     WHEN OTHERS THEN
@@ -763,7 +763,7 @@ CREATE OR REPLACE FUNCTION ins_age_at_obs_probability()
      --COMMIT;
 
     PERFORM insert_log('Processing complete', 'ins_age_at_obs_probability');
-    raise debug 'Processing complete ins_age_at_obs_probability, rows = %', num_rows;
+    raise notice 'Processing complete ins_age_at_obs_probability, rows = %', num_rows;
 
   EXCEPTION
     WHEN OTHERS THEN
@@ -819,7 +819,7 @@ CREATE OR REPLACE FUNCTION ins_age_at_obs_probability()
     GET DIAGNOSTICS num_rows = ROW_COUNT;
     MESSAGE := num_rows || ' rows inserted into osim_cond_count_probability.';
     PERFORM insert_log(MESSAGE, 'ins_cond_count_probability');
-    raise debug 'Inserted ins_cond_count_probability, rows = %', num_rows;
+    raise notice 'Inserted ins_cond_count_probability, rows = %', num_rows;
 
     --COMMIT;
 
@@ -836,7 +836,7 @@ CREATE OR REPLACE FUNCTION ins_age_at_obs_probability()
   --COMMIT;
 
   PERFORM insert_log('Processing complete', 'ins_cond_count_probability');
-  raise debug 'Processing complete ins_cond_count_probability';
+  raise notice 'Processing complete ins_cond_count_probability';
   EXCEPTION
     WHEN OTHERS THEN
     PERFORM insert_log('Exception', 'ins_cond_count_probability');
@@ -902,7 +902,7 @@ CREATE OR REPLACE FUNCTION ins_age_at_obs_probability()
     GET DIAGNOSTICS num_rows = ROW_COUNT;
     MESSAGE := num_rows || ' rows inserted into osim_years_obs_probability.';
     PERFORM insert_log(MESSAGE, 'ins_time_obs_probability');
-    raise debug 'Inserted ins_time_obs_probability, rows = %', num_rows;
+    raise notice 'Inserted ins_time_obs_probability, rows = %', num_rows;
 
     --COMMIT;
 
@@ -919,7 +919,7 @@ CREATE OR REPLACE FUNCTION ins_age_at_obs_probability()
     --COMMIT;
 
     PERFORM insert_log('Processing complete', 'ins_time_obs_probability');
-    raise debug 'Processing complete ins_time_obs_probability';
+    raise notice 'Processing complete ins_time_obs_probability';
 
   EXCEPTION
     WHEN OTHERS THEN
@@ -1035,7 +1035,7 @@ CREATE OR REPLACE FUNCTION ins_first_cond_probability()
     GET DIAGNOSTICS num_rows = ROW_COUNT;
     MESSAGE := num_rows || ' rows inserted into osim_first_cond_probability.';
     PERFORM insert_log(MESSAGE, 'ins_first_cond_probability');
-    raise debug 'Inserted ins_first_cond_probability, rows = %', num_rows;
+    raise notice 'Inserted ins_first_cond_probability, rows = %', num_rows;
 
     --COMMIT;
 
@@ -1067,7 +1067,7 @@ CREATE OR REPLACE FUNCTION ins_first_cond_probability()
     --COMMIT;
 
     PERFORM insert_log('Processing complete', 'ins_first_cond_probability');
-    raise debug 'Processing complete ins_first_cond_probability';
+    raise notice 'Processing complete ins_first_cond_probability';
 
   EXCEPTION
     WHEN OTHERS THEN
@@ -1183,7 +1183,7 @@ CREATE OR REPLACE FUNCTION ins_cond_days_before_prob()
     GET DIAGNOSTICS num_rows = ROW_COUNT;
     MESSAGE := num_rows || ' rows inserted into osim_cond_reoccur_probability.';
     PERFORM insert_log(MESSAGE, 'ins_cond_reoccur_probability');
-    raise debug 'Inserted ins_cond_reoccur_probability, rows = %', num_rows;
+    raise notice 'Inserted ins_cond_reoccur_probability, rows = %', num_rows;
 
     --COMMIT;
 
@@ -1215,7 +1215,7 @@ CREATE OR REPLACE FUNCTION ins_cond_days_before_prob()
     --COMMIT;
 
     PERFORM insert_log('Processing complete', 'ins_cond_reoccur_probability');
-    raise debug 'Processing complete ins_cond_reoccur_probability';
+    raise notice 'Processing complete ins_cond_reoccur_probability';
 
     EXCEPTION
     WHEN OTHERS THEN
@@ -1328,7 +1328,7 @@ CREATE OR REPLACE FUNCTION ins_procedure_days_before_prob()
     GET DIAGNOSTICS num_rows = ROW_COUNT;
     MESSAGE := num_rows || ' rows inserted into osim_procedure_reoccur_probability.';
     PERFORM insert_log(MESSAGE, 'ins_procedure_reoccur_probability');
-    raise debug 'Inserted ins_procedure_reoccur_probability, rows = %', num_rows;
+    raise notice 'Inserted ins_procedure_reoccur_probability, rows = %', num_rows;
 
     --COMMIT;
 
@@ -1360,7 +1360,7 @@ CREATE OR REPLACE FUNCTION ins_procedure_days_before_prob()
     --COMMIT;
 
     PERFORM insert_log('Processing complete', 'ins_procedure_reoccur_probability');
-    raise debug 'Processing complete ins_procedure_reoccur_probability';
+    raise notice 'Processing complete ins_procedure_reoccur_probability';
 
     EXCEPTION
     WHEN OTHERS THEN
@@ -1451,7 +1451,7 @@ CREATE OR REPLACE FUNCTION ins_drug_count_prob()
     GET DIAGNOSTICS num_rows = ROW_COUNT;
     MESSAGE := num_rows || ' rows inserted into osim_drug_count_prob.';
     PERFORM insert_log(MESSAGE, 'ins_drug_count_prob');
-    raise debug 'Inserted ins_drug_count_prob, rows = %', num_rows;
+    raise notice 'Inserted ins_drug_count_prob, rows = %', num_rows;
 
     --COMMIT;
 
@@ -1481,7 +1481,7 @@ CREATE OR REPLACE FUNCTION ins_drug_count_prob()
      --COMMIT;
 
     PERFORM insert_log('Processing complete', 'ins_drug_count_prob');
-    raise debug 'Processing complete ins_drug_count_prob';
+    raise notice 'Processing complete ins_drug_count_prob';
 
     EXCEPTION
       WHEN OTHERS THEN
@@ -1571,7 +1571,7 @@ CREATE OR REPLACE FUNCTION ins_procedure_count_prob()
     GET DIAGNOSTICS num_rows = ROW_COUNT;
     MESSAGE := num_rows || ' rows inserted into osim_drug_count_prob.';
     PERFORM insert_log(MESSAGE, 'ins_drug_count_prob');
-    raise debug 'Inserted ins_drug_count_prob, rows = %', num_rows;
+    raise notice 'Inserted ins_drug_count_prob, rows = %', num_rows;
 
     --COMMIT;
 
@@ -1601,7 +1601,7 @@ CREATE OR REPLACE FUNCTION ins_procedure_count_prob()
      --COMMIT;
 
     PERFORM insert_log('Processing complete', 'ins_procedure_count_prob');
-    raise debug 'Processing complete ins_procedure_count_prob';
+    raise notice 'Processing complete ins_procedure_count_prob';
 
     EXCEPTION
       WHEN OTHERS THEN
@@ -1799,7 +1799,7 @@ CREATE OR REPLACE FUNCTION ins_cond_drug_count_prob()
     GET DIAGNOSTICS num_rows = ROW_COUNT;
     MESSAGE := num_rows || ' rows inserted into osim_cond_drug_count_prob.';
     PERFORM insert_log(MESSAGE, 'ins_cond_drug_count_prob');
-    raise debug 'Inserted ins_cond_drug_count_prob, rows = %', num_rows;
+    raise notice 'Inserted ins_cond_drug_count_prob, rows = %', num_rows;
 
      --COMMIT;
 
@@ -1831,7 +1831,7 @@ CREATE OR REPLACE FUNCTION ins_cond_drug_count_prob()
     --COMMIT;
 
     PERFORM insert_log('Processing complete', 'ins_cond_drug_count_prob');
-    raise debug 'Processing complete ins_cond_drug_count_prob';
+    raise notice 'Processing complete ins_cond_drug_count_prob';
     EXCEPTION
     WHEN OTHERS THEN
     PERFORM insert_log('Exception', 'ins_cond_drug_count_prob');
@@ -2027,7 +2027,7 @@ CREATE OR REPLACE FUNCTION ins_cond_procedure_count_prob()
     GET DIAGNOSTICS num_rows = ROW_COUNT;
     MESSAGE := num_rows || ' rows inserted into osim_cond_procedure_count_prob.';
     PERFORM insert_log(MESSAGE, 'ins_cond_procedure_count_prob');
-    raise debug 'Inserted ins_cond_procedure_count_prob, rows = %', num_rows;
+    raise notice 'Inserted ins_cond_procedure_count_prob, rows = %', num_rows;
 
      --COMMIT;
 
@@ -2059,7 +2059,7 @@ CREATE OR REPLACE FUNCTION ins_cond_procedure_count_prob()
     --COMMIT;
 
     PERFORM insert_log('Processing complete', 'ins_cond_procedure_count_prob');
-    raise debug 'Processing complete ins_cond_procedure_count_prob';
+    raise notice 'Processing complete ins_cond_procedure_count_prob';
     EXCEPTION
     WHEN OTHERS THEN
     PERFORM insert_log('Exception', 'ins_cond_procedure_count_prob');
@@ -2289,7 +2289,7 @@ CREATE OR REPLACE FUNCTION ins_cond_first_drug_prob()
     MESSAGE := num_rows || ' rows inserted into osim_cond_drug_prob for '
         || 'co-occurent condtion transitions.';
     PERFORM insert_log(MESSAGE, 'ins_cond_drug_prob');
-  raise debug 'Inserted ins_cond_drug_prob, rows = %', num_rows;
+  raise notice 'Inserted ins_cond_drug_prob, rows = %', num_rows;
 
     --COMMIT;
 
@@ -2320,7 +2320,7 @@ CREATE OR REPLACE FUNCTION ins_cond_first_drug_prob()
     --COMMIT;
 
     PERFORM insert_log('Processing complete', 'ins_cond_first_drug_prob');
-    raise debug 'Processing complete ins_cond_drug_prob';
+    raise notice 'Processing complete ins_cond_drug_prob';
     EXCEPTION
       WHEN OTHERS THEN
       PERFORM insert_log('Exception', 'ins_cond_first_drug_prob');
@@ -2422,8 +2422,8 @@ CREATE OR REPLACE FUNCTION ins_cond_first_procedure_prob()
         WHERE person.observation_period_end_date
                 >= cond_dates.condition_era_start_date) cond_gaps
       LEFT JOIN v_src_first_procedures procedure ON cond_gaps.person_id = procedure.person_id
-          AND cond_gaps.cond_start_date <= procedure.procedure_occurrence_start_date
-          AND cond_gaps.next_cond_start_date > procedure.procedure_occurrence_start_date
+          AND cond_gaps.cond_start_date <= procedure.procedure_date
+          AND cond_gaps.next_cond_start_date > procedure.procedure_date
       GROUP BY cond_gaps.person_id, cond_gaps.gender_concept_id,
        cond_gaps.age_bucket, cond_gaps.condition_count_bucket,
        cond_gaps.procedure_count_bucket,cond_gaps.cond_start_date,
@@ -2439,7 +2439,7 @@ CREATE OR REPLACE FUNCTION ins_cond_first_procedure_prob()
           gaps.next_cond_start_date,
           gaps.day_cond_count,
           coalesce(cond.condition_concept_id,-1) AS condition_concept_id,
-          coalesce(procedure.procedure_occurrence_date,gaps.cond_start_date) AS procedure_occurrence_date,
+          coalesce(procedure.procedure_date,gaps.cond_start_date) AS procedure_occurrence_date,
           coalesce(procedure.procedure_concept_id,-1) AS procedure_concept_id
         FROM gaps
         LEFT JOIN v_src_condition_era1 cond
@@ -2447,8 +2447,8 @@ CREATE OR REPLACE FUNCTION ins_cond_first_procedure_prob()
           AND gaps.cond_start_date = cond.condition_era_start_date
         LEFT JOIN v_src_first_procedures procedure
           ON gaps.person_id = procedure.person_id
-            AND gaps.cond_start_date <= procedure.procedure_occurrence_start_date
-            AND gaps.next_cond_start_date > procedure.procedure_occurrence_start_date)
+            AND gaps.cond_start_date <= procedure.procedure_date
+            AND gaps.next_cond_start_date > procedure.procedure_date)
     SELECT
       condition_concept_id,
       interval_bucket,
@@ -2548,7 +2548,7 @@ CREATE OR REPLACE FUNCTION ins_cond_first_procedure_prob()
     MESSAGE := num_rows || ' rows inserted into osim_cond_procedure_prob for '
         || 'co-occurent condtion transitions.';
     PERFORM insert_log(MESSAGE, 'ins_cond_procedure_prob');
-  raise debug 'Inserted ins_cond_procedure_prob, rows = %', num_rows;
+  raise notice 'Inserted ins_cond_procedure_prob, rows = %', num_rows;
 
     --COMMIT;
 
@@ -2579,10 +2579,14 @@ CREATE OR REPLACE FUNCTION ins_cond_first_procedure_prob()
     --COMMIT;
 
     PERFORM insert_log('Processing complete', 'ins_cond_first_procedure_prob');
-    raise debug 'Processing complete ins_cond_procedure_prob';
+    raise notice 'Processing complete ins_cond_procedure_prob';
     EXCEPTION
       WHEN OTHERS THEN
       PERFORM insert_log('Exception', 'ins_cond_first_procedure_prob');
+      GET STACKED DIAGNOSTICS MESSAGE = PG_EXCEPTION_CONTEXT;
+      RAISE NOTICE 'context: >>%<<', MESSAGE;
+      raise NOTICE '% %', SQLERRM, SQLSTATE;
+
   END;
 $$ LANGUAGE plpgsql;
 
@@ -2681,7 +2685,7 @@ CREATE OR REPLACE FUNCTION ins_drug_era_count_prob()
     GET DIAGNOSTICS num_rows = ROW_COUNT;
     MESSAGE := num_rows || ' rows inserted into osim_drug_era_count_prob.';
     PERFORM insert_log(MESSAGE, 'ins_drug_era_count_prob');
-    raise debug 'Inserted ins_drug_era_count_prob, rows = %', num_rows;
+    raise notice 'Inserted ins_drug_era_count_prob, rows = %', num_rows;
 
     --COMMIT;
 
@@ -2715,7 +2719,7 @@ CREATE OR REPLACE FUNCTION ins_drug_era_count_prob()
      --COMMIT;
 
     PERFORM insert_log('Processing complete', 'ins_drug_era_count_prob');
-    raise debug 'Processing complete ins_drug_era_count_prob';
+    raise notice 'Processing complete ins_drug_era_count_prob';
     EXCEPTION
       WHEN OTHERS THEN
       PERFORM insert_log('Exception', 'ins_drug_era_count_prob');
@@ -2816,7 +2820,7 @@ CREATE OR REPLACE FUNCTION ins_procedure_occurrence_count_prob()
     GET DIAGNOSTICS num_rows = ROW_COUNT;
     MESSAGE := num_rows || ' rows inserted into osim_procedure_occurrence_count_prob.';
     PERFORM insert_log(MESSAGE, 'ins_procedure_occurrence_count_prob');
-    raise debug 'Inserted ins_procedure_occurrence_count_prob, rows = %', num_rows;
+    raise notice 'Inserted ins_procedure_occurrence_count_prob, rows = %', num_rows;
 
     --COMMIT;
 
@@ -2850,7 +2854,7 @@ CREATE OR REPLACE FUNCTION ins_procedure_occurrence_count_prob()
      --COMMIT;
 
     PERFORM insert_log('Processing complete', 'ins_procedure_occurrence_count_prob');
-    raise debug 'Processing complete ins_procedure_occurrence_count_prob';
+    raise notice 'Processing complete ins_procedure_occurrence_count_prob';
     EXCEPTION
       WHEN OTHERS THEN
       PERFORM insert_log('Exception', 'ins_procedure_occurrence_count_prob');
@@ -2940,7 +2944,7 @@ CREATE OR REPLACE FUNCTION ins_drug_duration_probability()
     GET DIAGNOSTICS num_rows = ROW_COUNT;
     MESSAGE := num_rows || ' rows inserted into osim_drug_duration_probability.';
     PERFORM insert_log(MESSAGE, 'ins_drug_duration_probability');
-    raise debug 'Inserted ins_drug_duration_probability, rows %', num_rows;
+    raise notice 'Inserted ins_drug_duration_probability, rows %', num_rows;
     --COMMIT;
 
 
@@ -2970,7 +2974,7 @@ CREATE OR REPLACE FUNCTION ins_drug_duration_probability()
     --COMMIT;
 
     PERFORM insert_log('Processing complete', 'ins_drug_duration_probability');
-    raise debug 'Processing complete ins_drug_duration_probability';
+    raise notice 'Processing complete ins_drug_duration_probability';
 
     EXCEPTION
     WHEN OTHERS THEN
@@ -3291,18 +3295,32 @@ CREATE OR REPLACE FUNCTION analyze_source_db()
         'analyze_source_db');
 
     PERFORM ins_src_db_attributes();
+    -- For person generation
     PERFORM ins_gender_probability();
     PERFORM ins_age_at_obs_probability();
+
+    -- For observation period generation
     PERFORM ins_cond_count_probability();
     PERFORM ins_time_obs_probability();
+
+    -- For condition generation
     PERFORM ins_cond_era_count_prob();
     PERFORM ins_first_cond_probability();
     PERFORM ins_cond_days_before_prob();
+
+    -- For drug generation
     PERFORM ins_drug_count_prob();
     PERFORM ins_cond_drug_count_prob();
     PERFORM ins_cond_first_drug_prob();
     PERFORM ins_drug_era_count_prob();
     PERFORM ins_drug_duration_probability();
+
+    -- For procedure generation
+    PERFORM ins_procedure_count_prob();
+    PERFORM ins_cond_procedure_count_prob();
+    PERFORM ins_cond_first_procedure_prob();
+    PERFORM ins_procedure_occurrence_count_prob();
+    PERFORM ins_procedure_days_before_prob();
 
     PERFORM insert_log('Processing complete', 'analyze_source_db');
 
@@ -3326,6 +3344,7 @@ CREATE OR REPLACE FUNCTION delete_all_sim_data()
     TRUNCATE TABLE osim_observation_period CASCADE;
     TRUNCATE TABLE osim_condition_era CASCADE;
     TRUNCATE TABLE osim_drug_era CASCADE;
+    TRUNCATE TABLE osim_procedure_occurrence CASCADE;
     --COMMIT;
 
 
@@ -3353,6 +3372,7 @@ CREATE OR REPLACE FUNCTION sim_initialization (
     OUT max_person_id                 INTEGER,
     OUT max_condition_era_id          INTEGER,
     OUT max_drug_era_id               INTEGER,
+    OUT max_procedure_occurrence_id   INTEGER,
     OUT osim_db_persons               INTEGER,
     OUT drug_persistence              INTEGER,
     OUT cond_persistence              INTEGER
@@ -3402,6 +3422,12 @@ CREATE OR REPLACE FUNCTION sim_initialization (
     SELECT coalesce(MAX(drug_era_id),0)
     INTO max_drug_era_id
     FROM osim_drug_era;
+
+    --Get max_procedure_occurrence_id from existsing simulated data
+    --to maintain unique ID generation
+    SELECT coalesce(MAX(procedure_occurrence_id),0)
+    INTO max_procedure_occurrence_id
+    FROM osim_procedure_occurrence;
 
     -- Get current person count in existing simulated data
     SELECT COUNT(distinct person_id)
@@ -4331,13 +4357,10 @@ $$ LANGUAGE plpgsql;
     this_cond_count_bucket        INTEGER;
     this_obs_days                 INTEGER;
     this_obs_bucket               INTEGER;
-    this_obs_start                DATE;
 
     this_person_begin_date        DATE;
     this_person_end_date          DATE;
-    this_era_delta_days           INTEGER;
-    tmp_rand                      FLOAT;
-    tmp INTEGER;
+
     drug_persistence              INTEGER;
     cond_persistence              INTEGER;
 
@@ -4359,7 +4382,7 @@ $$ LANGUAGE plpgsql;
     SELECT * from sim_initialization(person_start_id) INTO
     my_sid, my_start_time,
     db_min_date, db_max_date, db_min_year, db_max_year,
-    max_person_id, max_condition_era_id, max_drug_era_id,
+    max_person_id, max_condition_era_id, max_drug_era_id, max_procedure_occurrence_id,
     osim_db_persons, drug_persistence, cond_persistence;
 
     -- Create temp tables to store simulation for each person
@@ -4426,13 +4449,6 @@ $$ LANGUAGE plpgsql;
     LOOP
 
       --
-      -- Truncate tables (clear previous entries) - Not necessary due to where condition
-      --
---        TRUNCATE TABLE osim_tmp_condition_era;
---        TRUNCATE TABLE osim_tmp_drug_era;
---        TRUNCATE TABLE osim_tmp_outcome;
-
-      --
       -- Create osim person
       --
       SELECT * FROM ins_sim_person(db_min_year, max_person_id) INTO max_person_id,
@@ -4462,8 +4478,16 @@ $$ LANGUAGE plpgsql;
         this_age_bucket, drug_persistence);
 
       --
+      -- Simulate Procedures: Simulated from the person's conditions
+      --
+      PERFORM ins_sim_procedures(max_person_id, this_person_begin_date,
+        this_person_end_date, this_gender, this_cond_count_bucket, this_age,
+        this_age_bucket);
+
+      --
       -- Copy Eras from Temp Tables
       --
+
       -- insert conditions
       INSERT INTO osim_condition_era
        (condition_era_id, condition_era_start_date, condition_era_end_date,
@@ -4476,7 +4500,7 @@ $$ LANGUAGE plpgsql;
       FROM osim_tmp_condition_era
       WHERE person_id = max_person_id;
 
-      -- insert conditions
+      -- insert drugs
       INSERT INTO osim_drug_era
        (drug_era_id, drug_era_start_date, drug_era_end_date, person_id,
        drug_concept_id, drug_exposure_count)
@@ -4997,31 +5021,31 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
 
     tmp_rand                      FLOAT;
 
-    tmp_procedure_concept_id       INTEGER;
-    tmp_procedure_date   DATE;
+    this_occurrence_date   DATE;
+    this_occurrence_days_remaining        INTEGER;
+    this_occurrence_days_remaining_bucket INTEGER;
+    this_procedure_occurrences_max         INTEGER;
+    procedure_occurrences_for_procedure    INTEGER;
+    this_occurrence_age                   INTEGER;
+    this_occurrence_age_bucket            INTEGER;
+    this_occurrence_start        DATE;
+    this_occurrence_delta_days    INTEGER;
 
-    tmp_days_remaining        INTEGER;
-    tmp_days_remaining_bucket INTEGER;
-    tmp_procedure_occurrences_max         INTEGER;
-    tmp_procedure_occurrences_for_procedure    INTEGER;
-    tmp_age                   INTEGER;
-    tmp_age_bucket            INTEGER;
-    this_occurrence_delta_days  INTEGER;
-    tmp_duration_start        DATE;
-    tmp_delta_days    INTEGER;
 
+    this_procedure_age_bucket INTEGER;
+    this_procedure_age                  INTEGER;
     this_person_procedure_count        INTEGER;
-    this_procedure_concept             INTEGER;
+    this_target_procedure_count        INTEGER;
     this_cond_procedure_count_max      INTEGER;
     this_procedure_delta_days          INTEGER;
-    this_target_procedure_count        INTEGER;
+    this_procedure_days_remaining      INTEGER;
+    this_procedure_days_remaining_bucket INTEGER;
     this_target_procedure_bucket       INTEGER;
-    this_person_procedure_count        INTEGER;
     this_cond_procedure_count          INTEGER;
     this_procedure_concept             INTEGER;
-    this_procedure_delta_days          INTEGER;
 
   BEGIN
+    -- Add else part if all else fails
     --
     -- Simulate procedures
     --   procedures are simulated from the person's Conditons
@@ -5054,11 +5078,12 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
     --
     -- Begin procedure simulation Loop
     --
+    raise notice 'Starting main loop';
+    raise notice 'Max total procedures: %', this_target_procedure_count;
+
     WHILE this_person_procedure_count < this_target_procedure_count
     LOOP
       DECLARE
-        tmp_age                   INTEGER;
-        tmp_age_bucket            INTEGER;
         -- Cursor of all condition eras and start needed for transitions
         cond_era_cur CURSOR FOR
           SELECT
@@ -5109,10 +5134,10 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
         FOR cond_era IN cond_era_cur LOOP
           -- Draw for INTEGER of procedure Draws
           BEGIN
-            tmp_age := (cond_era.condition_era_start_date
+--             raise notice 'In condition loop';
+            this_procedure_age := (cond_era.condition_era_start_date
               - this_person_begin_date) / 365.25 + this_age;
-            tmp_age_bucket := osim__age_bucket(tmp_age);
-
+            this_procedure_age_bucket := osim__age_bucket(this_procedure_age);
             tmp_rand := random();
 
             SELECT DISTINCT
@@ -5124,24 +5149,27 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
               AND count_prob.procedure_count_bucket = this_target_procedure_bucket
               AND count_prob.condition_count_bucket = this_cond_count_bucket
               AND count_prob.interval_bucket = cond_era.interval_bucket
-              AND count_prob.age_bucket = tmp_age_bucket
+              AND count_prob.age_bucket = this_procedure_age_bucket
               AND tmp_rand <= count_prob.accumulated_probability;
           EXCEPTION
             WHEN NO_DATA_FOUND
               THEN
-                this_cond_procedure_count := 0;
+                this_cond_procedure_count_max := 0;
           END;
 
---           -- Force the last few procedures, if necessary
+          -- Force the last few procedures, if necessary
+          -- skipping this section since its not necessary for every condition to have a procedure
+
 --           IF this_target_procedure_count - this_person_procedure_count < 10
 --              AND this_cond_procedure_count_max = 0 THEN
 --             this_cond_procedure_count_max := 1;
 --           END IF;
 
           this_cond_procedure_count = 1;
-
+          raise notice 'This procedure condition max: %', this_cond_procedure_count_max;
           WHILE this_cond_procedure_count < this_cond_procedure_count_max
           LOOP
+            raise notice '% %', this_cond_procedure_count, this_cond_procedure_count_max;
           -- Draw for procedure Concept
             BEGIN
               tmp_rand := random();
@@ -5168,8 +5196,11 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
             END;
 
             IF this_procedure_concept > 0 AND NOT EXISTS (select 1 from this_person_procedures_table where procedure_concept_id = this_procedure_concept) THEN
-              this_procedure_delta_days := (osim__randomize_days(this_procedure_delta_days));
 
+              raise notice 'in procedure inner loop';
+              this_procedure_delta_days := (osim__randomize_days(this_procedure_delta_days));
+              this_procedure_days_remaining := this_person_end_date - this_occurrence_date;
+              this_procedure_days_remaining_bucket = osim__time_observed_bucket(this_occurrence_days_remaining);
 
               IF cond_era.condition_era_start_date + this_procedure_delta_days
                 <= this_person_end_date THEN
@@ -5181,47 +5212,48 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
                   cond_era.person_id,
                   this_procedure_concept,
                   1);
-
+                raise notice 'Inserted first occurrence';
                 this_person_procedure_count := this_person_procedure_count + 1;
+                this_cond_procedure_count = this_cond_procedure_count + 1;
+
                 INSERT INTO this_person_procedures_table VALUES (this_procedure_concept);
 
                 -- Insert procedure reoccurrences
 
                 -- initialization
 
-                tmp_procedure_concept_id := this_procedure_concept;
-                tmp_procedure_date := cond_era.condition_era_start_date + this_procedure_delta_days;
+                --this_procedure_concept;
+                this_occurrence_date := cond_era.condition_era_start_date + this_procedure_delta_days;
+                this_occurrence_days_remaining := this_person_end_date - this_occurrence_date;
+                this_occurrence_days_remaining_bucket :=
+                    osim__time_observed_bucket(this_occurrence_days_remaining);
 
-                tmp_days_remaining := this_person_end_date - tmp_procedure_date;
-                tmp_days_remaining_bucket :=
-                    osim__time_observed_bucket(tmp_days_remaining);
-
-                tmp_age := this_age + (tmp_procedure_date - this_person_begin_date) / 365.25;
-                tmp_age_bucket := osim__age_bucket(tmp_age);
+                this_occurrence_age := this_age + (this_occurrence_date - this_person_begin_date) / 365.25;
+                this_occurrence_age_bucket := osim__age_bucket(this_occurrence_age);
 
                 BEGIN
                     tmp_rand := random();
                     SELECT DISTINCT
                       FIRST_VALUE(procedure_occurrence_count)
                         OVER (ORDER BY accumulated_probability)
-                    INTO STRICT tmp_procedure_occurrences_max
+                    INTO STRICT this_procedure_occurrences_max
                     FROM osim_procedure_occurrence_count_prob
-                    WHERE procedure_concept_id = tmp_procedure_concept_id
+                    WHERE procedure_concept_id = this_procedure_concept
                       AND procedure_count_bucket = this_target_procedure_bucket
                       AND condition_count_bucket = this_cond_count_bucket
-                      AND age_range = tmp_age_bucket
-                      AND time_remaining = tmp_days_remaining_bucket
+                      AND age_range = this_occurrence_age_bucket
+                      AND time_remaining = this_occurrence_days_remaining_bucket
                       AND tmp_rand <= accumulated_probability;
                   EXCEPTION
                     WHEN NO_DATA_FOUND THEN
-                      tmp_procedure_occurrences_max := 1;
+                      this_procedure_occurrences_max := 1;
 
                 END;
 
-                tmp_procedure_occurrences_for_procedure := 1;
-                tmp_duration_start := tmp_procedure_date;
+                procedure_occurrences_for_procedure := 1;
+                this_occurrence_start := this_occurrence_date;
 
-                WHILE tmp_procedure_occurrences_for_procedure < tmp_procedure_occurrences_max
+                WHILE procedure_occurrences_for_procedure < this_procedure_occurrences_max
                   LOOP
                     tmp_rand := random();
 
@@ -5232,57 +5264,57 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
                           OVER (ORDER BY accumulated_probability) as delta_days
                       INTO STRICT this_occurrence_delta_days
                       FROM osim_procedure_reoccur_probability prob
-                        WHERE procedure_concept_id = tmp_procedure_concept_id
-                        AND age_range = tmp_age_bucket
-                        AND time_remaining = tmp_days_remaining
+                        WHERE procedure_concept_id = this_procedure_concept
+                        AND age_range = this_occurrence_age_bucket
+                        AND time_remaining = this_occurrence_days_remaining
                         AND tmp_rand <= accumulated_probability;
                     EXCEPTION
                       WHEN NO_DATA_FOUND
                         THEN
                           -- Reset to first occurrence
-                          tmp_age_bucket := 0;
-                          tmp_procedure_date := cond_era.condition_era_start_date + this_procedure_delta_days;
-                          tmp_age := this_age + (tmp_procedure_date - this_person_begin_date) / 365.25;
-                          tmp_days_remaining_bucket := tmp_days_remaining_bucket - this_occurrence_delta_days;
-                          tmp_procedure_occurrences_max := tmp_procedure_occurrences_max - 1;
+                          this_occurrence_age_bucket := 0;
+                          this_occurrence_date := cond_era.condition_era_start_date + this_procedure_delta_days;
+                          this_occurrence_age := (cond_era.condition_era_start_date - this_person_begin_date) / 365.25 + this_age;
+                          this_occurrence_days_remaining_bucket := this_procedure_days_remaining_bucket - this_procedure_delta_days;
+                          this_procedure_occurrences_max := this_procedure_occurrences_max - 1;
                     END;
 
-                  IF tmp_age_bucket > 0 THEN
+                  IF this_occurrence_age_bucket > 0 THEN
 
                       --
                       -- Write Procedure Occurrence
                       --
 
                       -- Randomize from returned days bucket
-                      tmp_delta_days := (osim__randomize_days(this_occurrence_delta_days));
+                      this_occurrence_delta_days := (osim__randomize_days(this_occurrence_delta_days));
 
-                      tmp_duration_start := tmp_duration_start + tmp_delta_days;
+                      this_occurrence_start := this_occurrence_start + this_occurrence_delta_days;
 
-                      tmp_age := tmp_age + tmp_delta_days / 365.25;
+                      this_occurrence_age := this_occurrence_age + this_occurrence_delta_days / 365.25;
 
-                      tmp_days_remaining_bucket := tmp_days_remaining_bucket - tmp_delta_days;
+                      this_occurrence_days_remaining_bucket := this_occurrence_days_remaining_bucket - this_occurrence_delta_days;
 
 
-                     INSERT INTO osim_tmp_procedure_era
+                     INSERT INTO osim_tmp_procedure_occurrence
                        (procedure_date, person_id,
                             procedure_concept_id, quantity)
                         SELECT
-                          tmp_duration_start,
+                          this_occurrence_start,
                           max_person_id,
-                          tmp_procedure_concept_id,
+                          this_procedure_concept,
                           1
                         ;
 
-                      tmp_procedure_occurrences_for_procedure := tmp_procedure_occurrences_for_procedure + 1;
+                      procedure_occurrences_for_procedure := procedure_occurrences_for_procedure + 1;
                       this_cond_procedure_count := this_cond_procedure_count + 1;
 
                     END IF;
 
-                    IF this_era_time_remaining < 0 THEN
-                      this_era_date := this_cond_date;
-                      this_era_age := this_cond_age;
-                      this_era_time_remaining := this_cond_time_remaining;
-                      this_cond_era_count_limit := this_cond_era_count_limit - 1;
+                    IF this_occurrence_days_remaining_bucket < 0 THEN
+                      this_occurrence_date := cond_era.condition_era_start_date;
+                      this_occurrence_age := this_procedure_age;
+                      this_occurrence_days_remaining_bucket := this_procedure_days_remaining_bucket;
+                      this_procedure_occurrences_max := this_procedure_occurrences_max - 1;
                     END IF;
 
                   END LOOP;

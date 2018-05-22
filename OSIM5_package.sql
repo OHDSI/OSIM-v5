@@ -84,7 +84,7 @@
 
 
 SET SEARCH_PATH TO synthetic_data_generation, public;
-CREATE EXTENSION tablefunc; -- for norm_random function
+CREATE EXTENSION IF NOT EXISTS tablefunc; -- for norm_random function
 
 DROP TYPE IF EXISTS COND_TRANSITION CASCADE;
 CREATE TYPE COND_TRANSITION AS (
@@ -3317,7 +3317,7 @@ CREATE OR REPLACE FUNCTION analyze_source_db()
 
     -- For procedure generation
     PERFORM ins_procedure_count_prob();
-    PERFORM ins_cond_procedure_count_prob();
+      PERFORM ins_cond_procedure_count_prob();
     PERFORM ins_cond_first_procedure_prob();
     PERFORM ins_procedure_occurrence_count_prob();
     PERFORM ins_procedure_days_before_prob();
@@ -3505,8 +3505,8 @@ CREATE OR REPLACE FUNCTION ins_sim_person (
       PERFORM insert_log('WARNING: Null values', 'ins_sim_person');
     END IF;
     max_person_id := max_person_id + 1;
-    PERFORM insert_log('Simulated a person',
-        'ins_sim_person');
+--     PERFORM insert_log('Simulated a person',
+--         'ins_sim_person');
   END;
  $$ LANGUAGE plpgsql;
 
@@ -3601,8 +3601,8 @@ CREATE OR REPLACE FUNCTION ins_sim_observation_period (
       this_person_end_date AS observation_period_end_date,
       'Y', 'Y', 'N'
     ;
-    PERFORM insert_log('Simulated observation period',
-        'ins_sim_observation_period');
+--     PERFORM insert_log('Simulated observation period',
+--         'ins_sim_observation_period');
   END;
 $$ LANGUAGE plpgsql;
 
@@ -3908,8 +3908,8 @@ $$ LANGUAGE plpgsql;
     this_person_cond_count_limit := this_person_cond_count;
     this_cond_count_bucket := osim__condition_count_bucket(this_person_cond_count);
 
-    PERFORM insert_log('Simulated condition',
-        'ins_sim_condition');
+--     PERFORM insert_log('Simulated condition',
+--         'ins_sim_condition');
   END;
   $$ LANGUAGE plpgsql;
 
@@ -4302,8 +4302,8 @@ $$ LANGUAGE plpgsql;
       END LOOP;
 
     END;
-    PERFORM insert_log('Simulated drug',
-        'ins_sim_drug');
+--     PERFORM insert_log('Simulated drug',
+--         'ins_sim_drug');
 
   END;
   $$ LANGUAGE plpgsql;
@@ -5078,8 +5078,8 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
     --
     -- Begin procedure simulation Loop
     --
-    raise notice 'Starting main loop';
-    raise notice 'Max total procedures: %', this_target_procedure_count;
+    -- raise notice 'Starting main loop';
+    -- raise notice 'Max total procedures: %', this_target_procedure_count;
 
     WHILE this_person_procedure_count < this_target_procedure_count
     LOOP
@@ -5166,10 +5166,10 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
 --           END IF;
 
           this_cond_procedure_count = 1;
-          raise notice 'This procedure condition max: %', this_cond_procedure_count_max;
+          -- raise notice 'This procedure condition max: %', this_cond_procedure_count_max;
           WHILE this_cond_procedure_count < this_cond_procedure_count_max
           LOOP
-            raise notice '% %', this_cond_procedure_count, this_cond_procedure_count_max;
+          --  raise notice '% %', this_cond_procedure_count, this_cond_procedure_count_max;
           -- Draw for procedure Concept
             BEGIN
               tmp_rand := random();
@@ -5197,7 +5197,7 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
 
             IF this_procedure_concept > 0 AND NOT EXISTS (select 1 from this_person_procedures_table where procedure_concept_id = this_procedure_concept) THEN
 
-              raise notice 'in procedure inner loop';
+            --  raise notice 'in procedure inner loop';
               this_procedure_delta_days := (osim__randomize_days(this_procedure_delta_days));
               this_procedure_days_remaining := this_person_end_date - this_occurrence_date;
               this_procedure_days_remaining_bucket = osim__time_observed_bucket(this_occurrence_days_remaining);
@@ -5212,7 +5212,7 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
                   cond_era.person_id,
                   this_procedure_concept,
                   1);
-                raise notice 'Inserted first occurrence';
+              --  raise notice 'Inserted first occurrence';
                 this_person_procedure_count := this_person_procedure_count + 1;
                 this_cond_procedure_count = this_cond_procedure_count + 1;
 
@@ -5341,8 +5341,8 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
 
     END LOOP;
 
-    PERFORM insert_log('Simulated procedure',
-        'ins_sim_procedure');
+--     PERFORM insert_log('Simulated procedure',
+--         'ins_sim_procedure');
 
   END;
   $$ LANGUAGE plpgsql;

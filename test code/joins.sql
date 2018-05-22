@@ -5,7 +5,7 @@
 --
 --===============================================
 
-SET SEARCH_PATH to synthetic_data_generation_test, public;
+SET SEARCH_PATH to synthetic_data_generation, public;
 
 --
 -- Drugs
@@ -13,7 +13,7 @@ SET SEARCH_PATH to synthetic_data_generation_test, public;
 SELECT *
 INTO osim_drug_era_concept
 FROM
-  osim_drug_era t1 INNER JOIN "mimic_v5"."concept" t2
+  osim_drug_era t1 INNER JOIN "omop"."concept" t2
   ON t1."drug_concept_id" = t2."concept_id";
 
 --
@@ -22,7 +22,7 @@ FROM
 SELECT *
 INTO osim_condition_era_concept
 FROM
-  osim_condition_era t1 INNER JOIN "mimic_v5"."concept" t2
+  osim_condition_era t1 INNER JOIN "omop"."concept" t2
   ON t1."condition_concept_id" = t2."concept_id";
 
 --
@@ -31,7 +31,7 @@ FROM
 SELECT *
 INTO osim_procedure_occurrence_concept
 FROM
-  osim_procedure_occurrence t1 INNER JOIN "mimic_v5"."concept" t2
+  osim_procedure_occurrence t1 INNER JOIN "omop"."concept" t2
   ON t1."procedure_concept_id" = t2."concept_id";
 
 

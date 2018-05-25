@@ -1,5 +1,5 @@
 # OSIM_v5 version 1.0.001
-OMOP CDM v5 version for OSIM simulator - Observational Medical Outcomes Partnership
+Synthetic Health Data Generator - OMOP CDM v5 version for OSIM simulator 
 
 ## Initial Version
 Oracle PL/SQL: Rich Murray, United BioSource Corporation <br/>
@@ -7,28 +7,27 @@ Last modified: 15 February 2011 <br/>
 2010 Foundation for the National Institutes of Health <br/></br>
 IMPORTANT NOTE: 
 <br/>
-Most of this documentation and code logic is identical to version 2, with syntactical changes as 
-required for the new format and PsotgreSQL conversion. 
+Much of this documentation and code logic is identical to version 2, with the addition of procedures, syntactical changes as 
+required for the new format and PostgreSQL conversion. 
 <br/>
-Please refer to the documentation available in v2 Documentation folder, or the paper avaibale at: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3243118/ for more information.
-
-## Current Version
-Written in PostgreSQL: Kausar Mukadam, Georgia Tech Research Institute
-
+Please refer to the documentation available in v2 Documentation folder, or the paper avaibale at: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3243118/ for more information about the initial version.
 
 ##   Description
 
 OSIM 5 is a OMOP CDM v5 compatible procedure for constructing simulated observational datasets.  The simulated datasets are modeled after real observational data sources, but consist of synthetic persons 
-with simulated drug exposures and condition occurrences. These condition/ drug instances are based on random draws from probability distributions. 
-These distribution are modeled after the relationships betwwen real like drugs and conditions. 
+with simulated drug exposures, condition exposures and procedure occurrences. These condition/drug/procedure instances are based on random draws from probability distributions; these distribution are modeled after the relationships 
+between real like drugs and conditions. 
 <br/><br/>
 This package was built on PostgreSQL. 
 
+## Current Version
+Written in PostgreSQL: Kausar Mukadam, Georgia Tech Research Institute
 
-## Execution
+## Execution Process
 
 ### Step 1: Edit Views
 
+    **Modify the first 4 views in OSIM5_views.sql**
     In order to analyze a CDM format database, the schema and tables for the source data need to be specified in OSIM 5.
     Modify the first 4 views in OSIM5_views.sql to point to the required tables. The final views should look as follows
     

@@ -14,21 +14,22 @@ Please refer to the documentation available in v2 Documentation folder, or the p
 The execution process for generating cohorts is similar to the OSIM process mentioned in brach master, with two additional steps.
 
 ### Step 1: Edit Views
-**Modify first 4 views in OSIM5_views.sql**  
+Modify first 4 views in OSIM5_views.sql
 
 ### Step 2: Create Views
-**Run OSIM5_views.sql file**  
+Run OSIM5_views.sql file 
  
 ### Step 3 (Optional): User Modifiable Range Functions
-**Modify range functions in OSIM5_package.sql**  
+Modify range functions in OSIM5_package.sql  
 
 ### Step 4: Table Generation
-**Run OSIM5_tables.sql file**  
+Run OSIM5_tables.sql file  
 
 ### Step 5: Analysis Phase: analyze_source_db()
-**Run stored procedure (analyze_source_db)**  
+Run stored procedure (analyze_source_db) 
   
 ### Step 6: Modify constaints for cohort
+
 **Modify OSIM5_modify.sql**  
 </br>
 Change initialization as required, to reflect the constraints for the cohort. Currently, you can specify the following conditions
@@ -49,7 +50,7 @@ Executing the OSIM5_modify.sql file creates a stored procedure, modify_prob(). W
 it modifies the transitional probabilities generated in the analysis phase to reflect the cohort conditions.
 
 ### Step 6: Simulated Data: ins_sim_data(person_count,person_start_id)
-**Run stored procedure (ins_sim_data)**  
+Run stored procedure (ins_sim_data) 
    
 ### Step 7(Optional): Outcomes
 

@@ -1,17 +1,6 @@
 # OSIM_v5 version 1.0.001
 Synthetic Health Data Generator - OMOP CDM v5 version for OSIM simulator 
 
-## Initial Version
-Oracle PL/SQL: Rich Murray, United BioSource Corporation <br/>
-Last modified: 15 February 2011 <br/>
-2010 Foundation for the National Institutes of Health <br/></br>
-IMPORTANT NOTE: 
-<br/>
-Much of this documentation and code logic is identical to version 2, with the addition of procedures, syntactical changes as 
-required for the new format and PostgreSQL conversion. 
-<br/>
-Please refer to the documentation available in v2 Documentation folder, or the paper avaibale at: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3243118/ for more information about the initial version.
-
 ##   Description
 
 OSIM 5 is a OMOP CDM v5 compatible procedure for constructing simulated observational datasets.  The simulated datasets are modeled after real observational data sources, but consist of synthetic persons 
@@ -22,6 +11,20 @@ This package was built on PostgreSQL.
 
 ## Current Version
 Written in PostgreSQL: Kausar Mukadam, Georgia Tech Research Institute
+
+## Additional Documentation
+For more information about version 5, please check the enclosed presentation.
+
+
+Please refer to the documentation available in v2 Documentation folder, or the paper avaibale at: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3243118/ for more information about the initial version.
+
+## Initial Version
+Oracle PL/SQL: Rich Murray, United BioSource Corporation <br/>
+Last modified: 15 February 2011 <br/>
+2010 Foundation for the National Institutes of Health <br/></br>
+Please note that much of the documentation and code logic for verison 5 is similar to version 2 with the addition of support for 
+procedure occurrence generation and syntactical changes as required for the new format and PostgreSQL conversion. 
+<br/>
 
 ## Execution Process
 

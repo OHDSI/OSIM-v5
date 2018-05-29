@@ -83,7 +83,7 @@
 --================================================================================
 
 
-SET SEARCH_PATH TO synthetic_data_generation, public;
+SET SEARCH_PATH TO synthetic_data_generation_test, public;
 CREATE EXTENSION IF NOT EXISTS tablefunc; -- for norm_random function
 
 DROP TYPE IF EXISTS COND_TRANSITION CASCADE;
@@ -101,8 +101,6 @@ CREATE TYPE DRUG_COND_OUTCOME AS (
   person_id        INTEGER,
   drug_era_id      INTEGER,
   condition_era_id INTEGER);
-
-DROP TYPE IF EXISTS CONCEPT_VECTOR CASCADE;
 
 /*=========================================================================
   | FUNCTION CONDITION_COUNT_BUCKET
@@ -1690,7 +1688,7 @@ CREATE OR REPLACE FUNCTION ins_cond_drug_count_prob()
             condition_era_start_date,
             COUNT(condition_concept_id) AS day_cond_count
           FROM
-           (SELECT DISTINCT
+           (SELECT
               cond.person_id,
               cond.condition_concept_id,
               cond.condition_era_start_date
@@ -1764,7 +1762,7 @@ CREATE OR REPLACE FUNCTION ins_cond_drug_count_prob()
           INNER JOIN v_src_condition_era1 cond
             ON gaps.person_id = cond.person_id
             AND gaps.cond_start_date = cond.condition_era_start_date
-          UNION
+          UNION ALL
           SELECT DISTINCT
             person_id,
             age_bucket,
@@ -1992,7 +1990,7 @@ CREATE OR REPLACE FUNCTION ins_cond_procedure_count_prob()
           INNER JOIN v_src_condition_era1 cond
             ON gaps.person_id = cond.person_id
             AND gaps.cond_start_date = cond.condition_era_start_date
-          UNION
+          UNION ALL
           SELECT DISTINCT
             person_id,
             age_bucket,
@@ -2147,7 +2145,7 @@ CREATE OR REPLACE FUNCTION ins_cond_first_drug_prob()
             condition_era_start_date,
             COUNT(condition_concept_id) AS day_cond_count
           FROM
-           (SELECT DISTINCT
+           (SELECT
               cond.person_id,
               cond.condition_concept_id,
               cond.condition_era_start_date
@@ -2259,7 +2257,7 @@ CREATE OR REPLACE FUNCTION ins_cond_first_drug_prob()
               drug_era_start_date - cond_start_date AS delta_days,
               drug_concept_id
             FROM cond_drug
-            UNION
+            UNION ALL
             SELECT DISTINCT
               gaps.person_id,
               gaps.gender_concept_id,
@@ -2406,7 +2404,7 @@ CREATE OR REPLACE FUNCTION ins_cond_first_procedure_prob()
             condition_era_start_date,
             COUNT(condition_concept_id) AS day_cond_count
           FROM
-           (SELECT DISTINCT
+           (SELECT
               cond.person_id,
               cond.condition_concept_id,
               cond.condition_era_start_date
@@ -2518,7 +2516,7 @@ CREATE OR REPLACE FUNCTION ins_cond_first_procedure_prob()
               procedure_occurrence_date - cond_start_date AS delta_days,
               procedure_concept_id
             FROM cond_procedure
-            UNION
+            UNION ALL
             SELECT DISTINCT
               gaps.person_id,
               gaps.gender_concept_id,
@@ -3002,6 +3000,9 @@ CREATE OR REPLACE FUNCTION drop_osim_indexes()
       'drop_osim_indexes');
 
     BEGIN
+      DROP INDEX xn_procedure_occurrence_concept_id;
+      DROP INDEX xn_procedure_occurrence_person_id;
+      DROP INDEX xn_procedure_occurrence_start_date;
       DROP INDEX xn_cond_era_concept_id;
       DROP INDEX xn_cond_era_person_id;
       DROP INDEX xn_cond_era_start_date;
@@ -3461,10 +3462,8 @@ CREATE OR REPLACE FUNCTION ins_sim_person (
     -- Create osim person
     --
     -- Try 5 times to generate a person before giving nulls
-    i := 1;
-    WHILE i <=5 LOOP
 
-      BEGIN
+    BEGIN
       -- Draw for gender_concept_id
       tmp_rand := random();
       SELECT DISTINCT FIRST_VALUE(gender_concept_id)
@@ -3474,12 +3473,10 @@ CREATE OR REPLACE FUNCTION ins_sim_person (
       WHERE tmp_rand <= accumulated_probability;
       EXCEPTION
         WHEN NO_DATA_FOUND THEN
-          i := i + 1; -- try again if value null
-          PERFORM insert_log('Trying again', 'ins_sim_person');
-          CONTINUE;
-      END;
+          PERFORM insert_log('Null Value in gender', 'ins_sim_person');
+    END;
 
-      BEGIN
+    BEGIN
         -- Draw for age
       tmp_rand := random();
       SELECT DISTINCT FIRST_VALUE(age_at_obs)
@@ -3490,20 +3487,12 @@ CREATE OR REPLACE FUNCTION ins_sim_person (
         AND tmp_rand <= accumulated_probability;
       EXCEPTION
         WHEN NO_DATA_FOUND THEN
-          i := i + 1; -- try again if value null
-          PERFORM insert_log('Trying again', 'ins_sim_person');
-          CONTINUE;
-      END;
+          PERFORM insert_log('Null value in age', 'ins_sim_person');
+    END;
 
-      -- Calcualte this person' age bucket and year of birth
-      this_age_bucket := osim__age_bucket(this_age);
-      this_year_of_birth := db_min_year - this_age;
-
-      EXIT; -- person created succesfully
-    END LOOP;
-    IF i = 6 THEN
-      PERFORM insert_log('WARNING: Null values', 'ins_sim_person');
-    END IF;
+    -- Calculate this person' age bucket and year of birth
+    this_age_bucket := osim__age_bucket(this_age);
+    this_year_of_birth := db_min_year - this_age;
     max_person_id := max_person_id + 1;
 --     PERFORM insert_log('Simulated a person',
 --         'ins_sim_person');
@@ -3601,8 +3590,6 @@ CREATE OR REPLACE FUNCTION ins_sim_observation_period (
       this_person_end_date AS observation_period_end_date,
       'Y', 'Y', 'N'
     ;
---     PERFORM insert_log('Simulated observation period',
---         'ins_sim_observation_period');
   END;
 $$ LANGUAGE plpgsql;
 
@@ -3624,6 +3611,7 @@ $$ LANGUAGE plpgsql;
   )
   RETURNS RECORD AS $$
   DECLARE
+    this_person_conditions        INTEGER ARRAY;
     tmp_rand                      FLOAT;
     this_person_cond_count        INTEGER;
     this_person_era_count         INTEGER;
@@ -3651,9 +3639,9 @@ $$ LANGUAGE plpgsql;
 
   BEGIN
     -- Clear existing condition concepts for new person
---     DROP TABLE IF EXISTS this_person_conditions_table;
 
-     TRUNCATE TABLE this_person_conditions_table;
+--     TRUNCATE TABLE this_person_conditions_table;
+    this_person_conditions := '{}';
 
     this_person_cond_count := 0;
     this_person_era_count := 0;
@@ -3734,7 +3722,8 @@ $$ LANGUAGE plpgsql;
       --   do not add it again
 
       IF this_cond_concept >= 0
-        AND NOT EXISTS (SELECT 1 FROM this_person_conditions_table WHERE condition_concept_id = this_cond_concept)
+        AND NOT EXISTS (SELECT this_cond_concept = ANY(this_person_conditions))
+-- AND NOT EXISTS (SELECT 1 FROM this_person_conditions_table WHERE condition_concept_id = this_cond_concept)
       THEN
 
         this_era_date := this_cond_date + this_cond_delta_days;
@@ -3786,7 +3775,7 @@ $$ LANGUAGE plpgsql;
 
         this_person_cond_count := this_person_cond_count + 1;
 
-        INSERT INTO this_person_conditions_table VALUES (this_cond_concept);
+       INSERT INTO this_person_conditions VALUES (this_cond_concept);
 
         -- Now Insert Condition Reoccurrences
         WHILE this_cond_era_count < this_cond_era_count_limit
@@ -3922,6 +3911,7 @@ $$ LANGUAGE plpgsql;
   */
     max_person_id                 INTEGER,
     this_person_begin_date        DATE,
+    INOUT max_drug_era_id            INTEGER,
     this_person_end_date          DATE,
     this_gender                   INTEGER,
     this_cond_count_bucket        INTEGER,
@@ -3930,9 +3920,9 @@ $$ LANGUAGE plpgsql;
     drug_persistence              INTEGER
 
   )
-  RETURNS VOID AS $$
+  RETURNS INTEGER AS $$
   DECLARE
-
+    this_person_drugs             INTEGER ARRAY;
     tmp_rand                      FLOAT;
     this_target_drug_count        INTEGER;
     this_target_drug_bucket       INTEGER;
@@ -3947,10 +3937,10 @@ $$ LANGUAGE plpgsql;
     --   Drugs are simulated from the person's Conditons
 
     -- Clear existing condition and drug concepts for new person
-    --     DROP TABLE IF EXISTS this_person_drugs_table;
 
-     TRUNCATE TABLE this_person_drugs_table;
 
+-- TRUNCATE TABLE this_person_drugs_table;
+    this_person_drugs := '{}';
 
     -- Draw for person's Distinct Drug Concept count
     BEGIN
@@ -4007,7 +3997,7 @@ $$ LANGUAGE plpgsql;
                           AS lag_end_date,
                 cond_dates.day_cond_count
               FROM
-               (SELECT DISTINCT
+               (SELECT
                   cond.person_id,
                   cond.condition_era_start_date,
                   COUNT (DISTINCT cond.condition_concept_id) AS day_cond_count
@@ -4087,16 +4077,20 @@ $$ LANGUAGE plpgsql;
                   this_drug_delta_days := 0;
             END;
 
-            IF this_drug_concept > 0 AND NOT EXISTS (select 1 from this_person_drugs_table where drug_concept_id = this_drug_concept) THEN
+            IF this_drug_concept > 0
+                AND NOT EXISTS (SELECT this_drug_concept = ANY(this_person_drug)) THEN
+               --AND NOT EXISTS (select 1 from this_person_drugs_table where drug_concept_id = this_drug_concept) THEN
               this_drug_delta_days := (osim__randomize_days(this_drug_delta_days));
 
 
               IF cond_era.condition_era_start_date + this_drug_delta_days
                 <= this_person_end_date THEN
+                max_drug_era_id := max_drug_era_id + 1;
                 INSERT INTO osim_tmp_drug_era
-                 (drug_era_start_date, drug_era_end_date, person_id,
+                 (drug_era_id, drug_era_start_date, drug_era_end_date, person_id,
                   drug_concept_id, drug_exposure_count)
                 VALUES(
+                  max_drug_era_id,
                   cond_era.condition_era_start_date + this_drug_delta_days,
                   cond_era.condition_era_start_date + this_drug_delta_days,
                   cond_era.person_id,
@@ -4104,8 +4098,8 @@ $$ LANGUAGE plpgsql;
                   1);
 
                 this_person_drug_count := this_person_drug_count + 1;
-                INSERT INTO this_person_drugs_table VALUES (this_drug_concept);
-
+                INSERT INTO this_person_drugs VALUES (this_drug_concept);
+                --INSERT INTO this_person_drugs_table VALUES (this_drug_concept);
                 IF this_person_drug_count >= this_target_drug_count THEN
                   --IF normal_rand(1, 0, 1) <= 0.8 THEN
                     EXIT cond_loop;
@@ -4283,10 +4277,11 @@ $$ LANGUAGE plpgsql;
               IF tmp_drug_era_end_date > this_person_end_date THEN
                 tmp_drug_era_end_date := this_person_end_date;
               END IF;
+              max_drug_era_id := max_drug_era_id + 1;
               INSERT INTO osim_tmp_drug_era
-                (drug_era_start_date, drug_era_end_date, person_id,
+                (drug_era_id, drug_era_start_date, drug_era_end_date, person_id,
                  drug_concept_id, drug_exposure_count)
-              VALUES( tmp_drug_era_start_date, tmp_drug_era_end_date,
+              VALUES( max_drug_era_id, tmp_drug_era_start_date, tmp_drug_era_end_date,
                       max_person_id,
 --                       db_drug_era_type_code,
                       tmp_drug_concept_id, 1);
@@ -4390,33 +4385,16 @@ $$ LANGUAGE plpgsql;
     --TEMP TABLES
     --===================================================================
 
-    DROP TABLE IF EXISTS this_person_drugs_table;
-    CREATE TEMPORARY TABLE this_person_drugs_table (
-      drug_concept_id INTEGER NOT NULL
-    ) ON COMMIT DELETE ROWS;
-    CREATE INDEX drug_id_index ON this_person_drugs_table (drug_concept_id);
-
-    DROP TABLE IF EXISTS this_person_conditions_table;
-    CREATE TEMPORARY TABLE this_person_conditions_table (
-      condition_concept_id INTEGER NOT NULL
-    ) ON COMMIT DELETE ROWS;
-    CREATE INDEX condition_id_index ON this_person_conditions_table (condition_concept_id);
-
-    DROP TABLE IF EXISTS this_person_procedures_table;
-    CREATE TEMPORARY TABLE this_person_procedures_table (
-      procedure_concept_id INTEGER NOT NULL
-    ) ON COMMIT DELETE ROWS;
-    CREATE INDEX procedure_id_index ON this_person_procedures_table (procedure_concept_id);
-
     DROP TABLE IF EXISTS osim_tmp_outcome;
-    CREATE TEMPORARY TABLE osim_tmp_outcome (
+    CREATE TABLE osim_tmp_outcome (
           person_id NUMERIC(12, 0) NOT NULL,
           drug_era_id NUMERIC(12, 0) NOT NULL,
           condition_era_id NUMERIC(12, 0) NOT NULL
-        ) ON COMMIT DELETE ROWS;
+        ) --ON COMMIT DELETE ROWS
+    ;
 
     DROP TABLE IF EXISTS osim_tmp_condition_era;
-    CREATE TEMPORARY TABLE osim_tmp_condition_era (
+    CREATE TABLE osim_tmp_condition_era (
           condition_era_id NUMERIC(15, 0) NOT NULL,
           condition_era_start_date DATE,
           person_id NUMERIC(12, 0) NOT NULL,
@@ -4424,29 +4402,44 @@ $$ LANGUAGE plpgsql;
           condition_era_end_date DATE,
           condition_concept_id NUMERIC(15, 0),
           condition_occurrence_count NUMERIC(5, 0)
-        ) ON COMMIT DELETE ROWS;
+        ) --ON COMMIT DELETE ROWS
+    ;
+
+    CREATE INDEX osim_cond ON osim_tmp_condition_era (person_id)
+      WITH (FILLFACTOR = 90);
+--     CREATE INDEX osim_cond1 ON osim_tmp_condition_era (person_id, condition_era_start_date)
+--       WITH (FILLFACTOR = 90);
 
     DROP TABLE IF EXISTS osim_tmp_drug_era;
-    CREATE TEMPORARY TABLE osim_tmp_drug_era (
+    CREATE TABLE osim_tmp_drug_era (
+          drug_era_id NUMERIC(15, 0) NOT NULL,
           drug_era_start_date DATE,
           drug_era_end_date DATE,
           person_id NUMERIC(12, 0) NOT NULL,
           drug_concept_id NUMERIC(15, 0),
           drug_exposure_count NUMERIC(5, 0)
-        ) ON COMMIT DELETE ROWS;
+        ) --ON COMMIT DELETE ROWS
+    ;
+    CREATE INDEX osim_drug ON osim_tmp_drug_era (person_id)
+      WITH (FILLFACTOR = 90);
 
     DROP TABLE IF EXISTS osim_tmp_procedure_occurrence;
-    CREATE TEMPORARY TABLE osim_tmp_procedure_occurrence (
+    CREATE TABLE osim_tmp_procedure_occurrence (
+          procedure_occurrence_id NUMERIC(15, 0) NOT NULL,
           procedure_date DATE,
           person_id NUMERIC(12, 0) NOT NULL,
           procedure_concept_id NUMERIC(15, 0),
           quantity NUMERIC(5, 0)
-        ) ON COMMIT DELETE ROWS;
+        ) --ON COMMIT DELETE ROWS
+    ;
+    CREATE INDEX osim_proc ON osim_tmp_procedure_occurrence (person_id)
+      WITH (FILLFACTOR = 90);
 
     -- Start the simulation
     person_index := 1;
     WHILE person_index <= max_persons
     LOOP
+
 
       --
       -- Create osim person
@@ -4473,21 +4466,20 @@ $$ LANGUAGE plpgsql;
       --
       -- Simulate Drugs: Simulated from the person's conditions
       --
-      PERFORM ins_sim_drugs(max_person_id, this_person_begin_date,
+      SELECT * FROM ins_sim_drugs(max_person_id, this_person_begin_date, max_drug_era_id,
         this_person_end_date, this_gender, this_cond_count_bucket, this_age,
-        this_age_bucket, drug_persistence);
+        this_age_bucket, drug_persistence) INTO max_drug_era_id;
 
       --
       -- Simulate Procedures: Simulated from the person's conditions
       --
-      PERFORM ins_sim_procedures(max_person_id, this_person_begin_date,
+      SELECT * FROM ins_sim_procedures(max_person_id, this_person_begin_date, max_procedure_occurrence_id,
         this_person_end_date, this_gender, this_cond_count_bucket, this_age,
-        this_age_bucket);
+        this_age_bucket) INTO max_procedure_occurrence_id;
 
       --
       -- Copy Eras from Temp Tables
       --
-
       -- insert conditions
       INSERT INTO osim_condition_era
        (condition_era_id, condition_era_start_date, condition_era_end_date,
@@ -4505,43 +4497,48 @@ $$ LANGUAGE plpgsql;
        (drug_era_id, drug_era_start_date, drug_era_end_date, person_id,
        drug_concept_id, drug_exposure_count)
       SELECT
-        max_drug_era_id + coalesce(row_number() OVER (ORDER BY person_id), 0) AS drug_era_id,
+        -- max_drug_era_id + coalesce(row_number() OVER (ORDER BY person_id), 0) AS
+        drug_era_id,
         drug_era_start_date, drug_era_end_date, person_id,
         drug_concept_id, drug_exposure_count
       FROM osim_tmp_drug_era
       WHERE person_id = max_person_id;
 
-      GET DIAGNOSTICS num_rows = ROW_COUNT;
-      max_drug_era_id := max_drug_era_id + num_rows;
+--       GET DIAGNOSTICS num_rows = ROW_COUNT;
+--       max_drug_era_id := max_drug_era_id + num_rows;
 
       -- insert procedures
       INSERT INTO osim_procedure_occurrence
        (procedure_occurrence_id, procedure_date, person_id,
        procedure_concept_id, quantity)
       SELECT
-        max_procedure_occurrence_id + coalesce(row_number() OVER (ORDER BY person_id), 0) AS procedure_occurrence_id,
+        --max_procedure_occurrence_id + coalesce(row_number() OVER (ORDER BY person_id), 0) AS
+        procedure_occurrence_id,
         procedure_date, person_id,
         procedure_concept_id, quantity
       FROM osim_tmp_procedure_occurrence
       WHERE person_id = max_person_id;
 
-      GET DIAGNOSTICS num_rows = ROW_COUNT;
-      max_procedure_occurrence_id := max_procedure_occurrence_id + num_rows;
+--       GET DIAGNOSTICS num_rows = ROW_COUNT;
+--       max_procedure_occurrence_id := max_procedure_occurrence_id + num_rows;
 
-      --COMMIT;
       --Report progress every 1%
       IF FLOOR(person_index/(0.01*person_count)) < FLOOR((person_index+1)/(0.01*person_count)) THEN
+        raise notice ' persons completed(%).', FLOOR((person_index+1)/(0.01*person_count));
         PERFORM insert_log('SID=' || my_sid || ': ' || to_char(person_index+1, '999999') || ' persons completed(' ||
           FLOOR((person_index+1)/(0.01*person_count)) || '%).',
           'ins_sim_data');
       END IF;
-
       person_index := person_index + 1;
+
+--       TRUNCATE TABLE osim_tmp_procedure_occurrence;
+--       TRUNCATE TABLE osim_tmp_condition_era;
+--       TRUNCATE TABLE osim_tmp_drug_era;
 
     END LOOP;
 
+
     person_index := person_index - 1;
-    --COMMIT;
     PERFORM insert_log('Processing complete.  ' || person_index
                      || ' persons created.', 'ins_sim_data');
   EXCEPTION
@@ -5010,17 +5007,18 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
   */
     max_person_id                 INTEGER,
     this_person_begin_date        DATE,
+    INOUT max_procedure_occurrence_id            INTEGER,
     this_person_end_date          DATE,
     this_gender                   INTEGER,
     this_cond_count_bucket        INTEGER,
     this_age                      INTEGER,
     this_age_bucket               INTEGER
   )
-  RETURNS VOID AS $$
+  RETURNS INTEGER AS $$
   DECLARE
 
     tmp_rand                      FLOAT;
-
+    this_person_procedures        INTEGER ARRAY;
     this_occurrence_date   DATE;
     this_occurrence_days_remaining        INTEGER;
     this_occurrence_days_remaining_bucket INTEGER;
@@ -5051,7 +5049,8 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
     --   procedures are simulated from the person's Conditons
 
     -- Clear existing condition and procedure concepts for new person
-    TRUNCATE TABLE this_person_procedures_table;
+--     TRUNCATE TABLE this_person_procedures_table;
+    this_person_procedures := '{}';
 
     -- Draw for person's Distinct procedure Concept count
     BEGIN
@@ -5111,7 +5110,7 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
                           AS lag_end_date,
                 cond_dates.day_cond_count
               FROM
-               (SELECT DISTINCT
+               (SELECT
                   cond.person_id,
                   cond.condition_era_start_date,
                   COUNT (DISTINCT cond.condition_concept_id) AS day_cond_count
@@ -5195,7 +5194,9 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
                   this_procedure_delta_days := 0;
             END;
 
-            IF this_procedure_concept > 0 AND NOT EXISTS (select 1 from this_person_procedures_table where procedure_concept_id = this_procedure_concept) THEN
+            IF this_procedure_concept > 0
+               AND NOT EXISTS (SELECT this_procedure_concept = ANY(this_person_procedures)) THEN
+               --AND NOT EXISTS (select 1 from this_person_procedures_table where procedure_concept_id = this_procedure_concept) THEN
 
             --  raise notice 'in procedure inner loop';
               this_procedure_delta_days := (osim__randomize_days(this_procedure_delta_days));
@@ -5204,10 +5205,12 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
 
               IF cond_era.condition_era_start_date + this_procedure_delta_days
                 <= this_person_end_date THEN
+                max_procedure_occurrence_id := max_procedure_occurrence_id + 1;
                 INSERT INTO osim_tmp_procedure_occurrence
-                 (procedure_date, person_id,
+                 (procedure_occurrence_id, procedure_date, person_id,
                   procedure_concept_id, quantity)
                 VALUES(
+                  max_procedure_occurrence_id,
                   cond_era.condition_era_start_date + this_procedure_delta_days,
                   cond_era.person_id,
                   this_procedure_concept,
@@ -5216,8 +5219,8 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
                 this_person_procedure_count := this_person_procedure_count + 1;
                 this_cond_procedure_count = this_cond_procedure_count + 1;
 
-                INSERT INTO this_person_procedures_table VALUES (this_procedure_concept);
-
+                --INSERT INTO this_person_procedures_table VALUES (this_procedure_concept);
+                INSERT INTO this_person_procedures VALUES (this_procedure_concept);
                 -- Insert procedure reoccurrences
 
                 -- initialization
@@ -5294,11 +5297,12 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
 
                       this_occurrence_days_remaining_bucket := this_occurrence_days_remaining_bucket - this_occurrence_delta_days;
 
-
+                    max_procedure_occurrence_id := max_procedure_occurrence_id + 1;
                      INSERT INTO osim_tmp_procedure_occurrence
-                       (procedure_date, person_id,
+                       (procedure_occurrence_id, procedure_date, person_id,
                             procedure_concept_id, quantity)
                         SELECT
+                          max_procedure_occurrence_id,
                           this_occurrence_start,
                           max_person_id,
                           this_procedure_concept,

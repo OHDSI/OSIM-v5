@@ -23,7 +23,7 @@
 --    Oracle PL/SQL Package for creation and selection of era cohorts from
 --    a CDM database.
 --
---    ©2011 Foundation for the National Institutes of Health (FNIH)
+--    ï¿½2011 Foundation for the National Institutes of Health (FNIH)
 --
 --    Licensed under the Apache License, Version 2.0 (the "License"); you may not
 --    use this file except in compliance with the License. You may obtain a copy
@@ -64,9 +64,13 @@ SET search_path TO synthetic_data_generation, public;
 
 --================================================================================
 -- Set 2. Edit views/schema to point to source tables
-CREATE OR REPLACE VIEW s_person as select * from omop.person;
+-- currently only selects persons with at least one condition in the era table
+
+CREATE OR REPLACE VIEW s_person as select * from omop.person
+    where person_id in (select condition_era.person_id from omop.condition_era);
+CREATE OR REPLACE VIEW s_observation_period as select * from omop.observation_period
+    where person_id in (select condition_era.person_id from omop.condition_era);
 CREATE OR REPLACE VIEW s_condition_era as select * from omop.condition_era;
-CREATE OR REPLACE VIEW s_observation_period as select * from omop.observation_period;
 CREATE OR REPLACE VIEW s_drug_era as select * from omop.drug_era;
 CREATE OR REPLACE VIEW s_procedure_occurrence as select * from omop.procedure_occurrence;
 --================================================================================

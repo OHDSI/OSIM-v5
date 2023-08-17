@@ -199,7 +199,7 @@ WITH (FILLFACTOR = 90);
 -- TABLE osim_tmp_outcome
 --================================================================================
 DROP TABLE IF EXISTS osim_tmp_outcome;
-CREATE GLOBAL TEMPORARY TABLE osim_tmp_outcome (
+CREATE TEMPORARY TABLE osim_tmp_outcome (
   person_id NUMERIC(12, 0) NOT NULL,
   drug_era_id NUMERIC(12, 0) NOT NULL,
   condition_era_id NUMERIC(12, 0) NOT NULL
@@ -209,7 +209,7 @@ CREATE GLOBAL TEMPORARY TABLE osim_tmp_outcome (
 -- TABLE osim_tmp_condition_era
 --================================================================================
 DROP TABLE IF EXISTS osim_tmp_condition_era;
-CREATE GLOBAL TEMPORARY TABLE osim_tmp_condition_era (
+CREATE TEMPORARY TABLE osim_tmp_condition_era (
   condition_era_id NUMERIC(15, 0) NOT NULL,
   condition_era_start_date DATE,
   person_id NUMERIC(12, 0) NOT NULL,
@@ -223,7 +223,7 @@ CREATE GLOBAL TEMPORARY TABLE osim_tmp_condition_era (
 -- TABLE osim_tmp_drug_era
 --================================================================================
 DROP TABLE IF EXISTS osim_tmp_drug_era;
-CREATE GLOBAL TEMPORARY TABLE osim_tmp_drug_era (
+CREATE TEMPORARY TABLE osim_tmp_drug_era (
   drug_era_start_date DATE,
   drug_era_end_date DATE,
   person_id NUMERIC(12, 0) NOT NULL,
@@ -237,7 +237,7 @@ CREATE GLOBAL TEMPORARY TABLE osim_tmp_drug_era (
 -- TABLE osim_person_condition
 --================================================================================
 DROP TABLE IF EXISTS osim_person_condition;
-CREATE GLOBAL TEMPORARY TABLE osim_person_condition (
+CREATE TEMPORARY TABLE osim_person_condition (
   oid bigserial PRIMARY KEY,
   person_id             NUMERIC(12, 0) NOT NULL,
   condition_concept_id  NUMERIC(12, 0) NOT NULL

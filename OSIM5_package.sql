@@ -795,7 +795,7 @@ CREATE OR REPLACE FUNCTION ins_age_at_obs_probability()
     TRUNCATE TABLE osim_cond_count_probability;
     --COMMIT;
 
-    INSERT /*+ append nologging */ INTO osim_cond_count_probability(gender_concept_id, age_at_obs, cond_era_count, cond_concept_count, n, accumulated_probability)
+    INSERT /*+ append nologging */ INTO osim_cond_count_probability
       SELECT
         gender_concept_id,
         age_at_obs,
@@ -869,7 +869,7 @@ CREATE OR REPLACE FUNCTION ins_age_at_obs_probability()
     TRUNCATE TABLE osim_time_obs_probability;
     --COMMIT;
 
-    INSERT /*+ append nologging */ INTO osim_time_obs_probability(gender_concept_id, age_at_obs, cond_count_bucket, time_observed, n, accumulated_probability)
+    INSERT /*+ append nologging */ INTO osim_time_obs_probability
       SELECT
         gender_concept_id,
         age_at_obs,

@@ -375,13 +375,14 @@ CREATE INDEX osim_first_cond_ix2 ON osim_first_cond_probability (accumulated_pro
 --================================================================================
 DROP TABLE IF EXISTS osim_cond_reoccur_probability;
   CREATE UNLOGGED TABLE osim_cond_reoccur_probability (
-	oid bigserial PRIMARY KEY,
 	condition_concept_id NUMERIC(15,0), 
 	age_range NUMERIC(3,0), 
 	time_remaining NUMERIC(4,0), 
 	delta_days FLOAT,
   n NUMERIC(10,0), 
-	accumulated_probability FLOAT)
+	accumulated_probability FLOAT,
+	oid bigserial PRIMARY KEY
+)
   WITH (FILLFACTOR = 90);
  
 CREATE INDEX osim_cond_reoccur_ix1 ON osim_cond_reoccur_probability (
@@ -617,13 +618,14 @@ CREATE INDEX osim_drug_duration_ix2 ON osim_drug_duration_probability (
 --================================================================================
 DROP TABLE IF EXISTS osim_drug_reoccur_probability;
   CREATE UNLOGGED TABLE osim_drug_reoccur_probability (
-	oid bigserial PRIMARY KEY,
 	drug_concept_id NUMERIC(15,0), 
 	age_range NUMERIC(3,0), 
 	time_remaining NUMERIC(4,0), 
 	delta_days FLOAT,
   n NUMERIC(10,0), 
-	accumulated_probability FLOAT)
+	accumulated_probability FLOAT,
+	oid bigserial PRIMARY KEY
+)
   WITH (FILLFACTOR = 90);
  
 CREATE INDEX osim_drug_reoccur_ix1 ON osim_drug_reoccur_probability (
@@ -638,13 +640,14 @@ CREATE INDEX osim_drug_reoccur_ix2 ON osim_drug_reoccur_probability (accumulated
 --================================================================================
 DROP TABLE IF EXISTS osim_procedure_reoccur_probability;
   CREATE UNLOGGED TABLE osim_procedure_reoccur_probability (
-	oid bigserial PRIMARY KEY,
 	procedure_concept_id NUMERIC(15,0),
 	age_range NUMERIC(3,0),
 	time_remaining NUMERIC(4,0),
 	delta_days FLOAT,
   n NUMERIC(10,0),
-	accumulated_probability FLOAT)
+	accumulated_probability FLOAT,
+	oid bigserial PRIMARY KEY
+)
   WITH (FILLFACTOR = 90);
 
 CREATE INDEX osim_procedure_reoccur_ix1 ON osim_procedure_reoccur_probability (

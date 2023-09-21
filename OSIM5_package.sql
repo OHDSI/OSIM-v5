@@ -5044,6 +5044,9 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
     this_cond_procedure_count          INTEGER;
     this_procedure_concept             INTEGER;
 
+MAX_ITERATION INTEGER;
+CURRENT_ITERATION INTEGER;
+
   BEGIN
     -- Add else part if all else fails
     --
@@ -5167,11 +5170,14 @@ CREATE OR REPLACE FUNCTION ins_sim_procedures (
 
           this_cond_procedure_count = 1;
           -- raise notice 'This procedure condition max: %', this_cond_procedure_count_max;
-          WHILE this_cond_procedure_count < this_cond_procedure_count_max
+MAX_ITERATION := 100;
+CURRENT_ITERATION := 0;
+          WHILE CURRENT_ITERATION < MAX_ITERATION AND this_cond_procedure_count < this_cond_procedure_count_max
           LOOP
           --  raise notice '% %', this_cond_procedure_count, this_cond_procedure_count_max;
           -- Draw for procedure Concept
             BEGIN
+CURRENT_ITERATION := CURRENT_ITERATION + 1;
               tmp_rand := random();
               SELECT DISTINCT
                 FIRST_VALUE(procedure_concept_id)

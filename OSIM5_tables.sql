@@ -72,8 +72,9 @@ CREATE UNLOGGED TABLE osim_condition_era (
   condition_concept_id NUMERIC(15, 0),
   condition_era_start_date DATE,
   condition_era_end_date DATE,
-  condition_occurrence_count NUMERIC(5, 0)
-) WITH (OIDS= TRUE, FILLFACTOR = 90); --opposite of PCTFREE
+  condition_occurrence_count NUMERIC(5, 0),
+  oid bigserial PRIMARY KEY
+) WITH (FILLFACTOR = 90); --opposite of PCTFREE
 
 
 CREATE INDEX xn_cond_era_concept_id ON osim_condition_era (condition_concept_id ASC)
@@ -97,9 +98,10 @@ CREATE UNLOGGED TABLE osim_observation_period (
   period_type_concept_id NUMERIC(15, 0),
   rx_data_availability TEXT,
   dx_data_availability TEXT,
-  hospital_data_availability TEXT
+  hospital_data_availability TEXT,
+  oid bigserial PRIMARY KEY
 )
-WITH (OIDS= TRUE, FILLFACTOR = 90);
+WITH (FILLFACTOR = 90);
 --COMPRESS;
 
 CREATE INDEX xn_obs_period_person_id ON osim_observation_period (person_id ASC) 
@@ -121,9 +123,10 @@ CREATE UNLOGGED TABLE osim_person (
   location_id NUMERIC(8, 0),
   gender_source_concept_id NUMERIC(8, 0),
   race_source_concept_id NUMERIC(8, 0),
-  ethnicity_source_concept_id NUMERIC(8, 0)
+  ethnicity_source_concept_id NUMERIC(8, 0),
+  oid bigserial PRIMARY KEY
 )
-WITH (OIDS= TRUE, FILLFACTOR = 90);
+WITH (FILLFACTOR = 90);
 
 CREATE UNIQUE INDEX xpk_person_person_id ON osim_person (person_id ASC)
  WITH (FILLFACTOR = 90);
@@ -140,9 +143,10 @@ CREATE UNLOGGED TABLE osim_drug_era
   drug_era_end_date DATE,
   person_id NUMERIC(12, 0) NOT NULL,
   drug_concept_id NUMERIC(15, 0),
-  drug_exposure_count NUMERIC(5, 0)
+  drug_exposure_count NUMERIC(5, 0),
+  oid bigserial PRIMARY KEY
 )
-WITH (OIDS= TRUE, FILLFACTOR = 90);
+WITH (FILLFACTOR = 90);
 --COMPRESS;
 
 CREATE INDEX xn_drug_era_concept_id ON osim_drug_era (drug_concept_id ASC)
@@ -162,9 +166,10 @@ CREATE UNLOGGED TABLE osim_procedure_occurrence
   procedure_date DATE,
   person_id NUMERIC(12, 0) NOT NULL,
   procedure_concept_id NUMERIC(15, 0),
-  quantity NUMERIC(5, 0)
+  quantity NUMERIC(5, 0),
+  oid bigserial PRIMARY KEY
 )
-WITH (OIDS= TRUE, FILLFACTOR = 90);
+WITH (FILLFACTOR = 90);
 --COMPRESS;
 
 CREATE INDEX xn_procedure_occurrence_concept_id ON osim_procedure_occurrence (procedure_concept_id ASC)
@@ -185,15 +190,16 @@ CREATE UNLOGGED TABLE osim_drug_outcome (
   relative_risk NUMERIC(8, 8) NOT NULL,
   outcome_risk_type VARCHAR(20) NOT NULL,
   outcome_onset_days_min NUMERIC(8, 0) NOT NULL,
-  outcome_onset_days_max NUMERIC(8, 0)
+  outcome_onset_days_max NUMERIC(8, 0),
+  oid bigserial PRIMARY KEY
 )
-WITH (OIDS= TRUE, FILLFACTOR = 90);
+WITH (FILLFACTOR = 90);
 
 --================================================================================
 -- TABLE osim_tmp_outcome
 --================================================================================
 DROP TABLE IF EXISTS osim_tmp_outcome;
-CREATE GLOBAL TEMPORARY TABLE osim_tmp_outcome (
+CREATE TEMPORARY TABLE osim_tmp_outcome (
   person_id NUMERIC(12, 0) NOT NULL,
   drug_era_id NUMERIC(12, 0) NOT NULL,
   condition_era_id NUMERIC(12, 0) NOT NULL
@@ -203,7 +209,7 @@ CREATE GLOBAL TEMPORARY TABLE osim_tmp_outcome (
 -- TABLE osim_tmp_condition_era
 --================================================================================
 DROP TABLE IF EXISTS osim_tmp_condition_era;
-CREATE GLOBAL TEMPORARY TABLE osim_tmp_condition_era (
+CREATE TEMPORARY TABLE osim_tmp_condition_era (
   condition_era_id NUMERIC(15, 0) NOT NULL,
   condition_era_start_date DATE,
   person_id NUMERIC(12, 0) NOT NULL,
@@ -217,7 +223,7 @@ CREATE GLOBAL TEMPORARY TABLE osim_tmp_condition_era (
 -- TABLE osim_tmp_drug_era
 --================================================================================
 DROP TABLE IF EXISTS osim_tmp_drug_era;
-CREATE GLOBAL TEMPORARY TABLE osim_tmp_drug_era (
+CREATE TEMPORARY TABLE osim_tmp_drug_era (
   drug_era_start_date DATE,
   drug_era_end_date DATE,
   person_id NUMERIC(12, 0) NOT NULL,
@@ -231,10 +237,11 @@ CREATE GLOBAL TEMPORARY TABLE osim_tmp_drug_era (
 -- TABLE osim_person_condition
 --================================================================================
 DROP TABLE IF EXISTS osim_person_condition;
-CREATE GLOBAL TEMPORARY TABLE osim_person_condition (
+CREATE TEMPORARY TABLE osim_person_condition (
   person_id             NUMERIC(12, 0) NOT NULL,
-  condition_concept_id  NUMERIC(12, 0) NOT NULL
-) WITH OIDS;
+  condition_concept_id  NUMERIC(12, 0) NOT NULL,
+  oid bigserial PRIMARY KEY
+);
 
 --================================================================================
 -- TABLE osim_log
@@ -243,8 +250,9 @@ DROP TABLE IF EXISTS osim_log;
 CREATE UNLOGGED TABLE osim_log (
   log_date              TIMESTAMP DEFAULT LOCALTIMESTAMP NOT NULL,
   stored_procedure_name VARCHAR(50),
-  MESSAGE               VARCHAR(500) NOT NULL
-) WITH OIDS;
+  MESSAGE               VARCHAR(500) NOT NULL,
+  oid bigserial PRIMARY KEY
+);
 
 --================================================================================
 -- PROBABILTY TABLES
@@ -259,8 +267,9 @@ CREATE UNLOGGED TABLE osim_src_db_attributes (
   persons_count NUMERIC(15,0), 
   condition_eras_count NUMERIC(15,0),
   drug_eras_count NUMERIC(15,0),
-  procedure_occurrences_count NUMERIC(15, 0)
-) WITH OIDS;
+  procedure_occurrences_count NUMERIC(15, 0),
+  oid bigserial PRIMARY KEY
+);
  
 --================================================================================
 -- TABLE osim_gender_probability
@@ -269,8 +278,9 @@ DROP TABLE IF EXISTS osim_gender_probability;
 CREATE UNLOGGED TABLE osim_gender_probability (
 	gender_concept_id NUMERIC(15,0), 
   n NUMERIC(10,0), 
-	accumulated_probability FLOAT
-) WITH OIDS;
+	accumulated_probability FLOAT,
+  oid bigserial PRIMARY KEY
+);
 
 --================================================================================
 -- TABLE osim_age_at_obs_probability
@@ -280,8 +290,9 @@ DROP TABLE IF EXISTS osim_age_at_obs_probability;
   gender_concept_id NUMERIC(15,0), 
 	age_at_obs NUMERIC(15,0), 
   n NUMERIC(10,0), 
-	accumulated_probability FLOAT
-) WITH OIDS;
+	accumulated_probability FLOAT,
+  oid bigserial PRIMARY KEY
+);
 
 --================================================================================
 -- TABLE osim_cond_count_probability
@@ -293,8 +304,9 @@ DROP TABLE IF EXISTS osim_cond_count_probability;
   cond_era_count NUMERIC(8,0),
 	cond_concept_count NUMERIC(5,0), 
   n NUMERIC(10,0), 
-	accumulated_probability FLOAT
-) WITH OIDS;
+	accumulated_probability FLOAT,
+  oid bigserial PRIMARY KEY
+);
 
 --================================================================================
 -- TABLE osim_time_obs_probability
@@ -306,8 +318,9 @@ DROP TABLE IF EXISTS osim_time_obs_probability;
 	cond_count_bucket NUMERIC(5,0), 
   time_observed NUMERIC(3,0),
   n NUMERIC(10,0), 
-	accumulated_probability FLOAT
-) WITH OIDS;
+	accumulated_probability FLOAT,
+  oid bigserial PRIMARY KEY
+);
 
 --================================================================================
 -- TABLE osim_cond_era_count_prob
@@ -319,8 +332,10 @@ DROP TABLE IF EXISTS osim_cond_era_count_prob;
   time_remaining NUMERIC(3,0),
 	cond_era_count NUMERIC(5,0), 
   n NUMERIC(10,0), 
-	accumulated_probability FLOAT)
-  WITH (OIDS= TRUE, FILLFACTOR = 90);
+	accumulated_probability FLOAT,
+  oid bigserial PRIMARY KEY
+)
+  WITH (FILLFACTOR = 90);
  
 CREATE INDEX osim_cond_era_count_ix1 ON osim_cond_era_count_prob (
   condition_concept_id, cond_count_bucket, time_remaining) 
@@ -342,8 +357,10 @@ DROP TABLE IF EXISTS osim_first_cond_probability;
 	condition2_concept_id NUMERIC(15,0), 
 	delta_days FLOAT,
   n NUMERIC(10,0), 
-	accumulated_probability FLOAT)
-  WITH (OIDS= TRUE, FILLFACTOR = 90);
+	accumulated_probability FLOAT,
+  oid bigserial PRIMARY KEY
+)
+  WITH (FILLFACTOR = 90);
  
 CREATE INDEX osim_first_cond_ix1 ON osim_first_cond_probability (
   condition1_concept_id, age_range, gender_concept_id, cond_count_bucket, time_remaining) 
@@ -363,8 +380,10 @@ DROP TABLE IF EXISTS osim_cond_reoccur_probability;
 	time_remaining NUMERIC(4,0), 
 	delta_days FLOAT,
   n NUMERIC(10,0), 
-	accumulated_probability FLOAT)
-  WITH (OIDS= TRUE, FILLFACTOR = 90);
+	accumulated_probability FLOAT,
+	oid bigserial PRIMARY KEY
+)
+  WITH (FILLFACTOR = 90);
  
 CREATE INDEX osim_cond_reoccur_ix1 ON osim_cond_reoccur_probability (
   condition_concept_id, age_range, time_remaining) 
@@ -384,8 +403,9 @@ CREATE UNLOGGED TABLE osim_drug_count_prob(
   condition_count_bucket NUMERIC(5,0),
   drug_count NUMERIC(5,0),
   n NUMERIC(10,0), 
-	accumulated_probability FLOAT
-) WITH OIDS;
+	accumulated_probability FLOAT,
+  oid bigserial PRIMARY KEY
+);
 
 CREATE INDEX osim_drug_count_prob_ix1 ON osim_drug_count_prob (
   gender_concept_id, age_bucket, condition_count_bucket) 
@@ -404,8 +424,9 @@ CREATE UNLOGGED TABLE osim_procedure_count_prob(
   condition_count_bucket NUMERIC(5,0),
   procedure_count NUMERIC(5,0),
   n NUMERIC(10,0),
-	accumulated_probability FLOAT
-) WITH OIDS;
+	accumulated_probability FLOAT,
+  oid bigserial PRIMARY KEY
+);
 
 CREATE INDEX osim_procedure_count_prob_ix1 ON osim_procedure_count_prob (
   gender_concept_id, age_bucket, condition_count_bucket)
@@ -426,8 +447,9 @@ CREATE UNLOGGED TABLE osim_cond_drug_count_prob(
   condition_count_bucket NUMERIC(5,0),
   drug_count NUMERIC(5,0),
   n NUMERIC(10,0), 
-	accumulated_probability FLOAT
-) WITH OIDS;
+	accumulated_probability FLOAT,
+  oid bigserial PRIMARY KEY
+);
 
 CREATE INDEX osim_cond_drug_count_prob_ix1 ON osim_cond_drug_count_prob (
   condition_concept_id, age_bucket, interval_bucket, drug_count_bucket, 
@@ -450,8 +472,9 @@ CREATE UNLOGGED TABLE osim_cond_procedure_count_prob(
   condition_count_bucket NUMERIC(5,0),
   procedure_count NUMERIC(5,0),
   n NUMERIC(10,0),
-	accumulated_probability FLOAT
-) WITH OIDS;
+	accumulated_probability FLOAT,
+  oid bigserial PRIMARY KEY
+);
 
 CREATE INDEX osim_cond_procedure_count_prob_ix1 ON osim_cond_procedure_count_prob (
   condition_concept_id, age_bucket, interval_bucket, procedure_count_bucket,
@@ -477,8 +500,9 @@ CREATE UNLOGGED TABLE osim_cond_first_drug_prob(
   drug_concept_id NUMERIC(15,0),
   delta_days NUMERIC(5,0),
   n NUMERIC(10,0), 
-	accumulated_probability FLOAT
-) WITH OIDS;
+	accumulated_probability FLOAT,
+  oid bigserial PRIMARY KEY
+);
 
 CREATE INDEX osim_cond_drug_prob_ix1 ON osim_cond_first_drug_prob (
   condition_concept_id, interval_bucket, age_bucket, condition_count_bucket,
@@ -503,8 +527,9 @@ CREATE UNLOGGED TABLE osim_cond_first_procedure_prob(
   procedure_concept_id NUMERIC(15,0),
   delta_days NUMERIC(5,0),
   n NUMERIC(10,0),
-	accumulated_probability FLOAT
-) WITH OIDS;
+	accumulated_probability FLOAT,
+  oid bigserial PRIMARY KEY
+);
 
 CREATE INDEX osim_cond_procedure_prob_ix1 ON osim_cond_first_procedure_prob (
   condition_concept_id, interval_bucket, age_bucket, condition_count_bucket,
@@ -527,8 +552,10 @@ DROP TABLE IF EXISTS osim_drug_era_count_prob;
 	drug_era_count NUMERIC(5,0), 
   total_exposure NUMERIC(5,0), 
   n NUMERIC(10,0), 
-	accumulated_probability FLOAT)
-  WITH (OIDS= TRUE, FILLFACTOR = 90);
+	accumulated_probability FLOAT,
+  oid bigserial PRIMARY KEY
+)
+  WITH (FILLFACTOR = 90);
  
 CREATE INDEX osim_drug_era_count_ix1 ON osim_drug_era_count_prob (
   drug_concept_id, drug_count_bucket, condition_count_bucket, age_range, time_remaining) 
@@ -549,8 +576,10 @@ DROP TABLE IF EXISTS osim_procedure_occurrence_count_prob;
   time_remaining NUMERIC(3,0),
 	procedure_occurrence_count NUMERIC(5,0),
   n NUMERIC(10,0),
-	accumulated_probability FLOAT)
-  WITH (OIDS= TRUE, FILLFACTOR = 90);
+	accumulated_probability FLOAT,
+  oid bigserial PRIMARY KEY
+)
+  WITH (FILLFACTOR = 90);
 
 CREATE INDEX osim_procedure_occurrence_count_ix1 ON osim_procedure_occurrence_count_prob (
   procedure_concept_id, procedure_count_bucket, condition_count_bucket, age_range, time_remaining)
@@ -570,8 +599,10 @@ DROP TABLE IF EXISTS osim_drug_duration_probability;
   total_exposure NUMERIC(5,0), 
   total_duration NUMERIC(5,0), 
   n NUMERIC(10,0), 
-	accumulated_probability FLOAT)
-  WITH (OIDS= TRUE, FILLFACTOR = 90);
+	accumulated_probability FLOAT,
+  oid bigserial PRIMARY KEY
+)
+  WITH (FILLFACTOR = 90);
  
 CREATE INDEX osim_drug_duration_ix1 ON osim_drug_duration_probability (
   drug_concept_id, time_remaining, drug_era_count, total_exposure) 
@@ -592,8 +623,10 @@ DROP TABLE IF EXISTS osim_drug_reoccur_probability;
 	time_remaining NUMERIC(4,0), 
 	delta_days FLOAT,
   n NUMERIC(10,0), 
-	accumulated_probability FLOAT)
-  WITH (OIDS= TRUE, FILLFACTOR = 90);
+	accumulated_probability FLOAT,
+	oid bigserial PRIMARY KEY
+)
+  WITH (FILLFACTOR = 90);
  
 CREATE INDEX osim_drug_reoccur_ix1 ON osim_drug_reoccur_probability (
   drug_concept_id, age_range, time_remaining) 
@@ -612,8 +645,10 @@ DROP TABLE IF EXISTS osim_procedure_reoccur_probability;
 	time_remaining NUMERIC(4,0),
 	delta_days FLOAT,
   n NUMERIC(10,0),
-	accumulated_probability FLOAT)
-  WITH (OIDS= TRUE, FILLFACTOR = 90);
+	accumulated_probability FLOAT,
+	oid bigserial PRIMARY KEY
+)
+  WITH (FILLFACTOR = 90);
 
 CREATE INDEX osim_procedure_reoccur_ix1 ON osim_procedure_reoccur_probability (
   procedure_concept_id, age_range, time_remaining)
